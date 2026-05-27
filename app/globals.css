@@ -1,26 +1,128 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #F8F7F5;
+  --foreground: #1C1C1E;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-zen-kaku), -apple-system, system-ui, sans-serif;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-zen-kaku), -apple-system, system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  overflow: hidden;
+}
+
+@keyframes timelinePulse {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.3;
+  }
+  50% {
+    transform: scale(1.6);
+    opacity: 0;
+  }
+}
+
+@keyframes dotBlink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.3;
+  }
+}
+
+@keyframes fadeCheckIn {
+  from {
+    transform: scale(0.8);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.scroll-area::-webkit-scrollbar {
+  display: none;
+}
+
+.scroll-area {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.task-row-delete {
+  opacity: 0;
+  transition:
+    opacity 0.18s ease,
+    background-color 0.18s ease;
+}
+
+.task-row:hover .task-row-delete,
+.task-row:focus-within .task-row-delete,
+.task-row-delete:focus-visible {
+  opacity: 1;
+}
+
+.task-row-delete:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+@media (hover: none) {
+  .task-row-delete {
+    opacity: 0.4;
+  }
+}
+
+.task-input::placeholder {
+  color: #c7c7cc;
+}
+
+.schedule-row-edit {
+  opacity: 0;
+  transition:
+    opacity 0.18s ease,
+    background-color 0.18s ease;
+}
+
+.schedule-row:hover .schedule-row-edit,
+.schedule-row:focus-within .schedule-row-edit,
+.schedule-row-edit:focus-visible {
+  opacity: 1;
+}
+
+.schedule-row-edit:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+@media (hover: none) {
+  .schedule-row-edit {
+    opacity: 0.4;
+  }
+}
+
+.schedule-dialog::backdrop {
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(4px);
 }
