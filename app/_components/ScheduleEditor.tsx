@@ -262,7 +262,7 @@ function ScheduleForm({
             id={durId}
             type="number"
             min={1}
-            step={5}
+            step={1}
             required
             value={draft.duration_minutes}
             onChange={(e) =>
@@ -282,7 +282,7 @@ function ScheduleForm({
             id={notifyId}
             type="number"
             min={0}
-            step={5}
+            step={1}
             required
             value={draft.notify_minutes_before}
             onChange={(e) =>

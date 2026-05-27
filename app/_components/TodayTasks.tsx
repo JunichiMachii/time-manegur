@@ -10,6 +10,7 @@ type Props = {
   onRemove: (id: number) => void;
   accent: string;
   dark?: boolean;
+  headerBg?: string;
 };
 
 type TaskRowProps = {
@@ -259,6 +260,7 @@ export function TodayTasks({
   onRemove,
   accent,
   dark = false,
+  headerBg = "transparent",
 }: Props) {
   const doneCount = tasks.filter((t) => t.done).length;
   const total = tasks.length;
@@ -268,46 +270,56 @@ export function TodayTasks({
     <div style={{ padding: "0 20px" }}>
       <div
         style={{
-          display: "flex",
-          alignItems: "baseline",
-          justifyContent: "space-between",
-          marginBottom: 16,
+          position: "sticky",
+          top: 0,
+          background: headerBg,
+          zIndex: 1,
+          paddingTop: 2,
+          paddingBottom: 10,
         }}
       >
         <div
           style={{
-            fontSize: 13,
-            fontWeight: 600,
-            letterSpacing: "0.06em",
-            textTransform: "uppercase",
-            color: "#8E8E93",
+            display: "flex",
+            alignItems: "baseline",
+            justifyContent: "space-between",
+            marginBottom: 14,
           }}
         >
-          今日やるべきこと
+          <div
+            style={{
+              fontSize: 13,
+              fontWeight: 600,
+              letterSpacing: "0.06em",
+              textTransform: "uppercase",
+              color: "#8E8E93",
+            }}
+          >
+            今日やるべきこと
+          </div>
+          <div style={{ fontSize: 13, fontWeight: 600, color: accent }}>
+            {doneCount}/{total}
+          </div>
         </div>
-        <div style={{ fontSize: 13, fontWeight: 600, color: accent }}>
-          {doneCount}/{total}
-        </div>
-      </div>
 
-      <div
-        style={{
-          height: 3,
-          borderRadius: 2,
-          background: dark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.05)",
-          marginBottom: 8,
-          overflow: "hidden",
-        }}
-      >
         <div
           style={{
-            height: "100%",
+            height: 3,
             borderRadius: 2,
-            background: accent,
-            width: `${progress}%`,
-            transition: "width 0.5s cubic-bezier(0.4, 0, 0.2, 1)",
+            background: dark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.05)",
+            overflow: "hidden",
           }}
-        />
+        >
+          <div
+            style={{
+              height: "100%",
+              borderRadius: 2,
+              background: accent,
+              width: `${progress}%`,
+              transition: "width 0.5s cubic-bezier(0.4, 0, 0.2, 1)",
+            }}
+          />
+        </div>
       </div>
 
       <div>

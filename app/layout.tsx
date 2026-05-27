@@ -12,6 +12,7 @@ const zenKaku = Zen_Kaku_Gothic_New({
 export const metadata: Metadata = {
   title: "時間管理アプリ",
   description: "今日やるべきことと決まった時間にやることを一画面で管理する",
+  manifest: "/manifest.json",
 };
 
 export default function RootLayout({

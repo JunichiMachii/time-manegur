@@ -1,6 +1,6 @@
 "use client";
 
-import type { ReactNode } from "react";
+import type { CSSProperties, ReactNode } from "react";
 import { DateHeader } from "./DateHeader";
 import { ScheduleTimeline } from "./ScheduleTimeline";
 import { TodayTasks } from "./TodayTasks";
@@ -16,6 +16,9 @@ type Props = {
   topInset?: number;
 };
 
+const TOP_FLEX = 45;
+const BOTTOM_FLEX = 55;
+
 export function MobileScreen({
   accent,
   dark = false,
@@ -24,6 +27,7 @@ export function MobileScreen({
 }: Props) {
   const { tasks, toggleTask, addTask, removeTask } = useTasksStore();
   const { items, addItem, updateItem, removeItem } = useScheduleStore();
+
   const bg = dark ? "#000000" : "#F8F7F5";
   const surfaceBg = dark ? "#1C1C1E" : "#FFFFFF";
   const textColor = dark ? "#F5F5F7" : "#1C1C1E";
@@ -32,24 +36,56 @@ export function MobileScreen({
     ? "0 2px 12px rgba(0,0,0,0.3)"
     : "0 1px 8px rgba(0,0,0,0.04), 0 0 0 1px rgba(0,0,0,0.03)";
   const isCard = layoutStyle === "card";
+  const headerBg = isCard ? surfaceBg : bg;
 
-  const wrapCard = (children: ReactNode) =>
-    isCard ? (
-      <div style={{ padding: "0 16px" }}>
+  const wrapScrollable = (children: ReactNode) => {
+    if (isCard) {
+      return (
         <div
           style={{
-            background: surfaceBg,
-            borderRadius: 20,
-            padding: "16px 20px",
-            boxShadow: cardShadow,
+            padding: "0 16px",
+            height: "100%",
+            boxSizing: "border-box",
           }}
         >
-          {children}
+          <div
+            className="scroll-area"
+            style={{
+              background: surfaceBg,
+              borderRadius: 20,
+              padding: "16px 20px",
+              boxShadow: cardShadow,
+              height: "100%",
+              overflowY: "auto",
+              overflowX: "hidden",
+              boxSizing: "border-box",
+            }}
+          >
+            {children}
+          </div>
         </div>
+      );
+    }
+    return (
+      <div
+        className="scroll-area"
+        style={{
+          height: "100%",
+          overflowY: "auto",
+          overflowX: "hidden",
+        }}
+      >
+        {children}
       </div>
-    ) : (
-      children
     );
+  };
+
+  const sectionStyle = (flex: number, padTop: number, padBottom: number): CSSProperties => ({
+    flex: `${flex} 1 0`,
+    minHeight: 0,
+    paddingTop: padTop,
+    paddingBottom: padBottom,
+  });
 
   return (
     <div
@@ -64,14 +100,15 @@ export function MobileScreen({
           "var(--font-zen-kaku), -apple-system, system-ui, sans-serif",
         paddingTop: topInset,
         overflow: "hidden",
+        boxSizing: "border-box",
       }}
     >
       <div style={{ paddingTop: 12, paddingBottom: 8, flexShrink: 0 }}>
         <DateHeader dark={dark} />
       </div>
 
-      <div style={{ flexShrink: 0, paddingTop: 12, paddingBottom: 20 }}>
-        {wrapCard(
+      <div style={sectionStyle(TOP_FLEX, 12, 20)}>
+        {wrapScrollable(
           <TodayTasks
             tasks={tasks}
             onToggle={toggleTask}
@@ -79,6 +116,7 @@ export function MobileScreen({
             onRemove={removeTask}
             accent={accent}
             dark={dark}
+            headerBg={headerBg}
           />,
         )}
       </div>
@@ -92,16 +130,8 @@ export function MobileScreen({
         }}
       />
 
-      <div
-        className="scroll-area"
-        style={{
-          flex: 1,
-          overflow: "auto",
-          paddingTop: 20,
-          paddingBottom: 40,
-        }}
-      >
-        {wrapCard(
+      <div style={sectionStyle(BOTTOM_FLEX, 20, 40)}>
+        {wrapScrollable(
           <ScheduleTimeline
             items={items}
             onAdd={addItem}
@@ -109,6 +139,7 @@ export function MobileScreen({
             onRemove={removeItem}
             accent={accent}
             dark={dark}
+            headerBg={headerBg}
           />,
         )}
       </div>

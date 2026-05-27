@@ -1,8 +1,37 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useSyncExternalStore } from "react";
 import { ScheduleEditor, type EditorMode } from "./ScheduleEditor";
 import type { ScheduleItem, ScheduleItemDraft } from "./types";
+
+function subscribeMinute(callback: () => void): () => void {
+  const now = new Date();
+  const delay =
+    (60 - now.getSeconds()) * 1000 - now.getMilliseconds();
+  let intervalId: ReturnType<typeof setInterval> | null = null;
+  const timeoutId = setTimeout(() => {
+    callback();
+    intervalId = setInterval(callback, 60_000);
+  }, Math.max(0, delay));
+  return () => {
+    clearTimeout(timeoutId);
+    if (intervalId) clearInterval(intervalId);
+  };
+}
+
+function getMinuteSnapshot(): number {
+  const d = new Date();
+  return d.getHours() * 60 + d.getMinutes();
+}
+
+function getServerMinuteSnapshot(): number {
+  return -1;
+}
+
+function parseTimeToMinutes(time: string): number {
+  const [h, m] = time.split(":").map((s) => parseInt(s, 10));
+  return (Number.isFinite(h) ? h : 0) * 60 + (Number.isFinite(m) ? m : 0);
+}
 
 type Props = {
   items: ScheduleItem[];
@@ -11,6 +40,7 @@ type Props = {
   onRemove: (id: number) => void;
   accent: string;
   dark?: boolean;
+  headerBg?: string;
 };
 
 type TimelineItemProps = {
@@ -278,8 +308,13 @@ export function ScheduleTimeline({
   onRemove,
   accent,
   dark = false,
+  headerBg = "transparent",
 }: Props) {
-  const nowHour = 10;
+  const nowMin = useSyncExternalStore(
+    subscribeMinute,
+    getMinuteSnapshot,
+    getServerMinuteSnapshot,
+  );
   const [mode, setMode] = useState<EditorMode | null>(null);
 
   const handleSave = (draft: ScheduleItemDraft) => {
@@ -294,10 +329,15 @@ export function ScheduleTimeline({
     <div style={{ padding: "0 20px" }}>
       <div
         style={{
+          position: "sticky",
+          top: 0,
+          background: headerBg,
+          zIndex: 1,
           display: "flex",
           alignItems: "center",
           gap: 8,
-          marginBottom: 20,
+          paddingTop: 2,
+          paddingBottom: 18,
         }}
       >
         <div
@@ -344,11 +384,13 @@ export function ScheduleTimeline({
         </button>
       </div>
 
-      <div>
+      <div suppressHydrationWarning>
         {items.map((item, i) => {
-          const itemHour = parseInt(item.time.split(":")[0], 10);
-          const isNow = itemHour === nowHour;
-          const isPast = itemHour < nowHour;
+          const startMin = parseTimeToMinutes(item.time);
+          const endMin = startMin + item.duration_minutes;
+          const isNow =
+            nowMin >= 0 && nowMin >= startMin && nowMin < endMin;
+          const isPast = nowMin >= 0 && nowMin >= endMin;
           return (
             <TimelineItem
               key={item.id}
