@@ -11,16 +11,52 @@ const SURFACE = "#FFFFFF";
 const BORDER = "rgba(0,0,0,0.08)";
 const FIELD_BG = "rgba(0,0,0,0.025)";
 
+type SubmitStatus = "idle" | "submitting" | "submitted" | "error";
+
+const SSFORM_URL = process.env.NEXT_PUBLIC_SSFORM_URL ?? "";
+
 export default function ContactPage() {
-  const [submitted, setSubmitted] = useState(false);
+  const [status, setStatus] = useState<SubmitStatus>("idle");
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [message, setMessage] = useState("");
 
-  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    // TODO: 後でメール送信サービス (Resend / SendGrid 等) と接続する
-    setSubmitted(true);
+    if (status === "submitting") return;
+    if (!SSFORM_URL) {
+      setErrorMsg(
+        "送信先が設定されていません。管理者にお問い合わせください。",
+      );
+      setStatus("error");
+      return;
+    }
+
+    setStatus("submitting");
+    setErrorMsg(null);
+
+    const fd = new FormData();
+    fd.append("name", name);
+    fd.append("email", email);
+    fd.append("message", message);
+
+    try {
+      // SSForm はクロスオリジン応答ヘッダを返さないため no-cors で投げる。
+      // 結果のステータスは取得できないが、ネットワーク失敗のみ catch できる。
+      await fetch(SSFORM_URL, {
+        method: "POST",
+        mode: "no-cors",
+        body: fd,
+      });
+      setStatus("submitted");
+    } catch (err) {
+      console.error("[contact] submit failed", err);
+      setErrorMsg(
+        "送信に失敗しました。通信状態をご確認のうえ、もう一度お試しください。",
+      );
+      setStatus("error");
+    }
   };
 
   return (
@@ -48,7 +84,9 @@ export default function ContactPage() {
       >
         <Header />
 
-        {submitted ? <ThanksView /> : (
+        {status === "submitted" ? (
+          <ThanksView />
+        ) : (
           <ContactForm
             name={name}
             email={email}
@@ -57,6 +95,8 @@ export default function ContactPage() {
             onEmail={setEmail}
             onMessage={setMessage}
             onSubmit={handleSubmit}
+            status={status}
+            errorMsg={errorMsg}
           />
         )}
       </div>
@@ -131,6 +171,8 @@ type ContactFormProps = {
   onEmail: (v: string) => void;
   onMessage: (v: string) => void;
   onSubmit: (e: FormEvent<HTMLFormElement>) => void;
+  status: SubmitStatus;
+  errorMsg: string | null;
 };
 
 function ContactForm({
@@ -141,7 +183,10 @@ function ContactForm({
   onEmail,
   onMessage,
   onSubmit,
+  status,
+  errorMsg,
 }: ContactFormProps) {
+  const submitting = status === "submitting";
   return (
     <>
       <h1
@@ -214,8 +259,27 @@ function ContactForm({
           placeholder="ご質問やフィードバックをお書きください"
         />
 
+        {errorMsg && (
+          <div
+            role="alert"
+            style={{
+              fontSize: 12.5,
+              color: "#C45045",
+              lineHeight: 1.6,
+              padding: "10px 12px",
+              borderRadius: 10,
+              background: "rgba(196,80,69,0.08)",
+              border: "1px solid rgba(196,80,69,0.2)",
+            }}
+          >
+            {errorMsg}
+          </div>
+        )}
+
         <button
           type="submit"
+          disabled={submitting}
+          aria-busy={submitting}
           style={{
             appearance: "none",
             border: 0,
@@ -226,12 +290,14 @@ function ContactForm({
             fontFamily: "inherit",
             padding: "14px 22px",
             borderRadius: 14,
-            cursor: "pointer",
+            cursor: submitting ? "default" : "pointer",
+            opacity: submitting ? 0.6 : 1,
             boxShadow: `0 6px 16px ${ACCENT}40`,
             marginTop: 6,
+            transition: "opacity 0.18s ease",
           }}
         >
-          送信する
+          {submitting ? "送信中…" : "送信する"}
         </button>
       </form>
 
@@ -418,7 +484,7 @@ function ThanksView() {
           marginBottom: 10,
         }}
       >
-        送信が完了しました。
+        お問い合わせを受け付けました。
       </h2>
       <p
         style={{
@@ -429,9 +495,9 @@ function ThanksView() {
           marginBottom: 24,
         }}
       >
-        ありがとうございます！内容を確認のうえ、
+        自動返信メールをご確認ください。
         <br />
-        必要に応じてご連絡いたします。
+        内容を確認のうえ、必要に応じてご連絡いたします。
       </p>
       <Link
         href="/lp"
