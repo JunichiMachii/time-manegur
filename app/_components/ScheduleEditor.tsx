@@ -7,6 +7,7 @@ import {
   useState,
   type FormEvent,
 } from "react";
+import { TimeSlotPicker } from "./TimeSlotPicker";
 import type { ScheduleItem, ScheduleItemDraft } from "./types";
 
 export type EditorMode =
@@ -22,14 +23,24 @@ type Props = {
   dark: boolean;
 };
 
-const EMPTY: ScheduleItemDraft = {
-  time: "09:00",
-  title: "",
-  duration_minutes: 30,
-  notify_minutes_before: 0,
-  is_recurring: false,
-  scheduled_date: null,
-};
+function pad2(n: number): string {
+  return String(n).padStart(2, "0");
+}
+
+function parseHHMM(s: string): { h: number; m: number } {
+  const [hStr, mStr] = s.split(":");
+  const h = parseInt(hStr ?? "", 10);
+  const m = parseInt(mStr ?? "", 10);
+  return {
+    h: Number.isFinite(h) ? Math.max(0, Math.min(23, h)) : 0,
+    m: Number.isFinite(m) ? Math.max(0, Math.min(59, m)) : 0,
+  };
+}
+
+function nowHHMM(): { h: number; m: number } {
+  const d = new Date();
+  return { h: d.getHours(), m: d.getMinutes() };
+}
 
 export function ScheduleEditor({
   mode,
@@ -109,44 +120,52 @@ function ScheduleForm({
   dark,
 }: FormProps) {
   const titleId = useId();
-  const timeId = useId();
-  const durId = useId();
   const notifyId = useId();
 
-  const [draft, setDraft] = useState<ScheduleItemDraft>(() =>
-    mode.kind === "edit"
-      ? {
-          time: mode.item.time,
-          title: mode.item.title,
-          duration_minutes: mode.item.duration_minutes,
-          notify_minutes_before: mode.item.notify_minutes_before,
-          is_recurring: mode.item.is_recurring,
-          scheduled_date: mode.item.scheduled_date,
-        }
-      : EMPTY,
+  // create時は title/is_recurring/scheduled_date のみdraftで管理
+  const initialRecurring =
+    mode.kind === "edit" ? mode.item.is_recurring : false;
+  const initialScheduledDate =
+    mode.kind === "edit" ? mode.item.scheduled_date : null;
+
+  const [title, setTitle] = useState<string>(
+    mode.kind === "edit" ? mode.item.title : "",
   );
-  // 数値input は文字列で持ち、submit時にparse。
-  // type="number" の controlled valueと表示文字列の不一致（"05"が残る等）を回避。
-  const [durationText, setDurationText] = useState<string>(() =>
-    String(draft.duration_minutes),
+  const [isRecurring, setIsRecurring] = useState<boolean>(initialRecurring);
+  const [scheduledDate] = useState<string | null>(initialScheduledDate);
+
+  // 時刻スロット: 編集時は item.time、新規は現在時刻
+  const initialTime =
+    mode.kind === "edit" ? parseHHMM(mode.item.time) : nowHHMM();
+  const [hour, setHour] = useState<number>(initialTime.h);
+  const [minute, setMinute] = useState<number>(initialTime.m);
+
+  // 所要時間スロット: 編集時は item.duration_minutes を分解。新規は30分。
+  const initialDuration =
+    mode.kind === "edit" ? mode.item.duration_minutes : 30;
+  const [durHours, setDurHours] = useState<number>(
+    Math.floor(initialDuration / 60),
   );
+  const [durMinutes, setDurMinutes] = useState<number>(initialDuration % 60);
+
+  // 通知は数値テキスト入力のまま
   const [notifyText, setNotifyText] = useState<string>(() =>
-    String(draft.notify_minutes_before),
+    String(mode.kind === "edit" ? mode.item.notify_minutes_before : 0),
   );
 
   const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const title = draft.title.trim();
-    if (!title) return;
-    const duration = Math.max(1, parseInt(durationText, 10) || 1);
+    const trimmed = title.trim();
+    if (!trimmed) return;
+    const totalDuration = Math.max(1, durHours * 60 + durMinutes);
     const notify = Math.max(0, parseInt(notifyText, 10) || 0);
     onSave({
-      time: draft.time,
-      title,
-      duration_minutes: duration,
+      time: `${pad2(hour)}:${pad2(minute)}`,
+      title: trimmed,
+      duration_minutes: totalDuration,
       notify_minutes_before: notify,
-      is_recurring: draft.is_recurring,
-      scheduled_date: draft.scheduled_date,
+      is_recurring: isRecurring,
+      scheduled_date: scheduledDate,
     });
     onClose();
   };
@@ -237,17 +256,47 @@ function ScheduleForm({
       </div>
 
       <div>
-        <label htmlFor={timeId} style={labelStyle}>
-          時間
-        </label>
-        <input
-          id={timeId}
-          type="time"
-          required
-          value={draft.time}
-          onChange={(e) => setDraft((d) => ({ ...d, time: e.target.value }))}
-          style={fieldStyle}
-        />
+        <div style={labelStyle}>時間</div>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 4,
+            padding: "8px 0",
+            background: fieldBg,
+            border: `1px solid ${border}`,
+            borderRadius: 12,
+          }}
+        >
+          <TimeSlotPicker
+            value={hour}
+            min={0}
+            max={23}
+            onChange={setHour}
+            ariaLabel="時"
+            dark={dark}
+          />
+          <div
+            aria-hidden="true"
+            style={{
+              fontSize: 22,
+              fontWeight: 700,
+              color: text,
+              padding: "0 4px",
+            }}
+          >
+            :
+          </div>
+          <TimeSlotPicker
+            value={minute}
+            min={0}
+            max={59}
+            onChange={setMinute}
+            ariaLabel="分"
+            dark={dark}
+          />
+        </div>
       </div>
 
       <div>
@@ -259,58 +308,79 @@ function ScheduleForm({
           type="text"
           required
           autoFocus
-          value={draft.title}
-          onChange={(e) => setDraft((d) => ({ ...d, title: e.target.value }))}
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
           placeholder="例: チームMTG"
           style={fieldStyle}
         />
       </div>
 
-      <div style={{ display: "flex", gap: 12 }}>
-        <div style={{ flex: 1 }}>
-          <label htmlFor={durId} style={labelStyle}>
-            所要時間 (分)
-          </label>
-          <input
-            id={durId}
-            type="text"
-            inputMode="numeric"
-            pattern="[0-9]*"
-            required
-            value={durationText}
-            onChange={(e) =>
-              setDurationText(
-                e.target.value.replace(/\D/g, "").replace(/^0+(?=\d)/, ""),
-              )
-            }
-            onBlur={() => {
-              if (durationText === "") setDurationText("1");
-            }}
-            style={fieldStyle}
+      <div>
+        <div style={labelStyle}>所要時間</div>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 4,
+            padding: "8px 0",
+            background: fieldBg,
+            border: `1px solid ${border}`,
+            borderRadius: 12,
+          }}
+        >
+          <TimeSlotPicker
+            value={durHours}
+            min={0}
+            max={23}
+            onChange={setDurHours}
+            padZero={false}
+            ariaLabel="所要時間 時"
+            dark={dark}
           />
-        </div>
-        <div style={{ flex: 1 }}>
-          <label htmlFor={notifyId} style={labelStyle}>
-            通知 (何分前)
-          </label>
-          <input
-            id={notifyId}
-            type="text"
-            inputMode="numeric"
-            pattern="[0-9]*"
-            required
-            value={notifyText}
-            onChange={(e) =>
-              setNotifyText(
-                e.target.value.replace(/\D/g, "").replace(/^0+(?=\d)/, ""),
-              )
-            }
-            onBlur={() => {
-              if (notifyText === "") setNotifyText("0");
-            }}
-            style={fieldStyle}
+          <span
+            style={{ fontSize: 14, fontWeight: 600, color: muted, padding: "0 2px" }}
+          >
+            時間
+          </span>
+          <TimeSlotPicker
+            value={durMinutes}
+            min={0}
+            max={59}
+            onChange={setDurMinutes}
+            padZero={false}
+            ariaLabel="所要時間 分"
+            dark={dark}
           />
+          <span
+            style={{ fontSize: 14, fontWeight: 600, color: muted, padding: "0 2px" }}
+          >
+            分
+          </span>
         </div>
+      </div>
+
+      <div>
+        <label htmlFor={notifyId} style={labelStyle}>
+          通知 (何分前)
+        </label>
+        <input
+          id={notifyId}
+          type="text"
+          inputMode="numeric"
+          pattern="[0-9]*"
+          required
+          value={notifyText}
+          onChange={(e) =>
+            setNotifyText(
+              e.target.value.replace(/\D/g, "").replace(/^0+(?=\d)/, ""),
+            )
+          }
+          onBlur={() => {
+            if (notifyText === "") setNotifyText("0");
+          }}
+          style={fieldStyle}
+        />
       </div>
 
       <label
@@ -339,10 +409,8 @@ function ScheduleForm({
         <input
           id={`${titleId}-recur`}
           type="checkbox"
-          checked={draft.is_recurring}
-          onChange={(e) =>
-            setDraft((d) => ({ ...d, is_recurring: e.target.checked }))
-          }
+          checked={isRecurring}
+          onChange={(e) => setIsRecurring(e.target.checked)}
           style={{
             position: "absolute",
             opacity: 0,
@@ -356,7 +424,7 @@ function ScheduleForm({
             width: 40,
             height: 24,
             borderRadius: 999,
-            background: draft.is_recurring ? accent : dark ? "#48484A" : "#D1D1D6",
+            background: isRecurring ? accent : dark ? "#48484A" : "#D1D1D6",
             transition: "background 0.18s ease",
             flexShrink: 0,
           }}
@@ -365,7 +433,7 @@ function ScheduleForm({
             style={{
               position: "absolute",
               top: 2,
-              left: draft.is_recurring ? 18 : 2,
+              left: isRecurring ? 18 : 2,
               width: 20,
               height: 20,
               borderRadius: "50%",
