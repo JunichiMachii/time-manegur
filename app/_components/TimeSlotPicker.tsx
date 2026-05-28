@@ -12,8 +12,8 @@ type Props = {
   dark?: boolean;
 };
 
-const ITEM_HEIGHT = 36;
-const VISIBLE = 5; // 表示行数（奇数で中央1行が選択）
+const ITEM_HEIGHT = 34;
+const VISIBLE = 3; // 表示行数（奇数で中央1行が選択）
 const PAD = Math.floor(VISIBLE / 2);
 
 export function TimeSlotPicker({
