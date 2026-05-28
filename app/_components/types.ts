@@ -3,6 +3,13 @@ export type Task = {
   title: string;
   tag: string | null;
   done: boolean;
+  scheduled_date: string;
+};
+
+export type UserProfile = {
+  email: string | null;
+  name: string | null;
+  avatarUrl: string | null;
 };
 
 export type ScheduleItem = {
@@ -12,12 +19,7 @@ export type ScheduleItem = {
   duration_minutes: number;
   notify_minutes_before: number;
   is_recurring: boolean;
-};
-
-export type UserProfile = {
-  email: string | null;
-  name: string | null;
-  avatarUrl: string | null;
+  scheduled_date: string | null;
 };
 
 export type ScheduleItemDraft = {
@@ -26,4 +28,5 @@ export type ScheduleItemDraft = {
   duration_minutes: number;
   notify_minutes_before: number;
   is_recurring: boolean;
+  scheduled_date: string | null;
 };

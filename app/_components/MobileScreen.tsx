@@ -8,11 +8,14 @@ import {
   type CSSProperties,
   type ReactNode,
 } from "react";
+import { useRouter } from "next/navigation";
+import { DateCalendar } from "./DateCalendar";
 import { DateHeader } from "./DateHeader";
 import { ScheduleTimeline } from "./ScheduleTimeline";
 import { SettingsSheet } from "./SettingsSheet";
 import { TodayTasks } from "./TodayTasks";
 import type { ScheduleItem, Task, UserProfile } from "./types";
+import { todayLocal } from "./dateUtils";
 import { useScheduleStore } from "./useScheduleStore";
 import { useTasksStore } from "./useTasksStore";
 
@@ -26,6 +29,7 @@ type Props = {
   initialTasks?: Task[];
   initialItems?: ScheduleItem[];
   userProfile?: UserProfile;
+  selectedDate?: string;
 };
 
 const EMPTY_PROFILE: UserProfile = {
@@ -49,12 +53,32 @@ export function MobileScreen({
   initialTasks = [],
   initialItems = [],
   userProfile = EMPTY_PROFILE,
+  selectedDate,
 }: Props) {
-  const { tasks, toggleTask, addTask, removeTask } = useTasksStore(initialTasks);
-  const { items, addItem, updateItem, removeItem } = useScheduleStore(initialItems);
+  const router = useRouter();
+  const effectiveDate = selectedDate ?? todayLocal();
+  const { tasks, toggleTask, addTask, removeTask } = useTasksStore(
+    initialTasks,
+    effectiveDate,
+  );
+  const { items, addItem, updateItem, removeItem } = useScheduleStore(
+    initialItems,
+    effectiveDate,
+  );
 
   const [activeTab, setActiveTab] = useState<TabKey>("tasks");
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [calendarOpen, setCalendarOpen] = useState(false);
+
+  const handleSelectDate = (date: string) => {
+    setCalendarOpen(false);
+    if (date === effectiveDate) return;
+    if (date === todayLocal()) {
+      router.push("/");
+    } else {
+      router.push(`/?date=${date}`);
+    }
+  };
   const pagerRef = useRef<HTMLDivElement | null>(null);
   const scrollRafRef = useRef<number | null>(null);
 
@@ -181,7 +205,11 @@ export function MobileScreen({
         }}
       >
         <div style={{ flex: 1, minWidth: 0 }}>
-          <DateHeader dark={dark} />
+          <DateHeader
+            dark={dark}
+            selectedDate={effectiveDate}
+            onClick={() => setCalendarOpen(true)}
+          />
         </div>
         <button
           type="button"
@@ -319,6 +347,15 @@ export function MobileScreen({
         open={settingsOpen}
         onClose={() => setSettingsOpen(false)}
         user={userProfile}
+        accent={accent}
+        dark={dark}
+      />
+
+      <DateCalendar
+        open={calendarOpen}
+        selectedDate={effectiveDate}
+        onSelect={handleSelectDate}
+        onClose={() => setCalendarOpen(false)}
         accent={accent}
         dark={dark}
       />

@@ -28,6 +28,7 @@ const EMPTY: ScheduleItemDraft = {
   duration_minutes: 30,
   notify_minutes_before: 0,
   is_recurring: false,
+  scheduled_date: null,
 };
 
 export function ScheduleEditor({
@@ -120,6 +121,7 @@ function ScheduleForm({
           duration_minutes: mode.item.duration_minutes,
           notify_minutes_before: mode.item.notify_minutes_before,
           is_recurring: mode.item.is_recurring,
+          scheduled_date: mode.item.scheduled_date,
         }
       : EMPTY,
   );
@@ -137,6 +139,7 @@ function ScheduleForm({
         Math.floor(draft.notify_minutes_before),
       ),
       is_recurring: draft.is_recurring,
+      scheduled_date: draft.scheduled_date,
     });
     onClose();
   };

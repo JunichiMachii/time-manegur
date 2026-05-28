@@ -1,11 +1,11 @@
 "use client";
 
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import type { Task } from "./types";
 
 const TABLE = "tasks";
-const COLUMNS = "id, title, tag, done";
+const COLUMNS = "id, title, tag, done, scheduled_date";
 
 export type TasksStore = {
   tasks: Task[];
@@ -14,10 +14,18 @@ export type TasksStore = {
   removeTask: (id: number) => void;
 };
 
-export function useTasksStore(initial: Task[]): TasksStore {
+export function useTasksStore(
+  initial: Task[],
+  scheduledDate: string,
+): TasksStore {
   const [tasks, setTasks] = useState<Task[]>(initial);
   const supabase = useMemo(() => createClient(), []);
   const tempIdRef = useRef(-1);
+
+  // 日付切替時にサーバー側初期データへ同期
+  useEffect(() => {
+    setTasks(initial);
+  }, [initial]);
 
   const toggleTask = useCallback(
     (id: number) => {
@@ -57,12 +65,13 @@ export function useTasksStore(initial: Task[]): TasksStore {
         title: trimmed,
         tag,
         done: false,
+        scheduled_date: scheduledDate,
       };
       setTasks((prev) => [...prev, optimistic]);
 
       void supabase
         .from(TABLE)
-        .insert({ title: trimmed, tag, done: false })
+        .insert({ title: trimmed, tag, done: false, scheduled_date: scheduledDate })
         .select(COLUMNS)
         .single()
         .then(({ data, error }) => {
@@ -76,7 +85,7 @@ export function useTasksStore(initial: Task[]): TasksStore {
           );
         });
     },
-    [supabase],
+    [supabase, scheduledDate],
   );
 
   const removeTask = useCallback(

@@ -2,10 +2,17 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { MobileScreen } from "./_components/MobileScreen";
 import type { ScheduleItem, Task, UserProfile } from "./_components/types";
+import { isValidDateStr, todayLocal } from "./_components/dateUtils";
 
 export const dynamic = "force-dynamic";
 
-export default async function Home() {
+type SearchParams = Promise<{ date?: string | string[] }>;
+
+export default async function Home({
+  searchParams,
+}: {
+  searchParams: SearchParams;
+}) {
   const supabase = await createClient();
   const { data } = await supabase.auth.getClaims();
   if (!data?.claims) redirect("/login");
@@ -24,17 +31,25 @@ export default async function Home() {
       null,
   };
 
+  const params = await searchParams;
+  const rawDate = Array.isArray(params.date) ? params.date[0] : params.date;
+  // dateパラメータの形式が壊れていたら今日にフォールバック
+  const selectedDate =
+    rawDate && isValidDateStr(rawDate) ? rawDate : todayLocal();
+
   const [tasksRes, scheduleRes] = await Promise.all([
     supabase
       .from("tasks")
-      .select("id, title, tag, done")
+      .select("id, title, tag, done, scheduled_date")
+      .eq("scheduled_date", selectedDate)
       .order("id", { ascending: true }),
-    // 毎日固定（is_recurring=true）+ その他の予定を時間順で取得
+    // 毎日固定（is_recurring=true）+ 選択日のその他の予定を時間順で取得
     supabase
       .from("schedule_items")
       .select(
-        "id, time, title, duration_minutes, notify_minutes_before, is_recurring",
+        "id, time, title, duration_minutes, notify_minutes_before, is_recurring, scheduled_date",
       )
+      .or(`is_recurring.eq.true,scheduled_date.eq.${selectedDate}`)
       .order("time", { ascending: true }),
   ]);
 
@@ -61,6 +76,7 @@ export default async function Home() {
         initialTasks={initialTasks}
         initialItems={initialItems}
         userProfile={userProfile}
+        selectedDate={selectedDate}
       />
     </main>
   );

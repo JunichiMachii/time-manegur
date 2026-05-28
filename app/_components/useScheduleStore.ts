@@ -1,12 +1,12 @@
 "use client";
 
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import type { ScheduleItem, ScheduleItemDraft } from "./types";
 
 const TABLE = "schedule_items";
 const COLUMNS =
-  "id, time, title, duration_minutes, notify_minutes_before, is_recurring";
+  "id, time, title, duration_minutes, notify_minutes_before, is_recurring, scheduled_date";
 
 export type ScheduleStore = {
   items: ScheduleItem[];
@@ -19,20 +19,34 @@ function sortByTime(items: ScheduleItem[]): ScheduleItem[] {
   return [...items].sort((a, b) => a.time.localeCompare(b.time));
 }
 
-export function useScheduleStore(initial: ScheduleItem[]): ScheduleStore {
+export function useScheduleStore(
+  initial: ScheduleItem[],
+  scheduledDate: string,
+): ScheduleStore {
   const [items, setItems] = useState<ScheduleItem[]>(initial);
   const supabase = useMemo(() => createClient(), []);
   const tempIdRef = useRef(-1);
 
+  // 日付切替時にサーバー側初期データへ同期
+  useEffect(() => {
+    setItems(initial);
+  }, [initial]);
+
   const addItem = useCallback(
     (draft: ScheduleItemDraft) => {
       const tempId = tempIdRef.current--;
-      const optimistic: ScheduleItem = { id: tempId, ...draft };
+      // 毎日固定は scheduled_date を NULL に。単発は選択中の日付にバインド。
+      const insertDate = draft.is_recurring ? null : scheduledDate;
+      const optimistic: ScheduleItem = {
+        id: tempId,
+        ...draft,
+        scheduled_date: insertDate,
+      };
       setItems((prev) => sortByTime([...prev, optimistic]));
 
       void supabase
         .from(TABLE)
-        .insert(draft)
+        .insert({ ...draft, scheduled_date: insertDate })
         .select(COLUMNS)
         .single()
         .then(({ data, error }) => {
@@ -48,7 +62,7 @@ export function useScheduleStore(initial: ScheduleItem[]): ScheduleStore {
           );
         });
     },
-    [supabase],
+    [supabase, scheduledDate],
   );
 
   const updateItem = useCallback(
@@ -64,9 +78,17 @@ export function useScheduleStore(initial: ScheduleItem[]): ScheduleStore {
       if (id < 0 || !prevItem) return; // 楽観挿入中は同期しない
       const snapshot = prevItem;
 
+      // is_recurring トグル時に scheduled_date を整合させる
+      const dbPatch: Partial<ScheduleItemDraft> = { ...patch };
+      if (patch.is_recurring === true) {
+        dbPatch.scheduled_date = null;
+      } else if (patch.is_recurring === false) {
+        dbPatch.scheduled_date = scheduledDate;
+      }
+
       void supabase
         .from(TABLE)
-        .update(patch)
+        .update(dbPatch)
         .eq("id", id)
         .then(({ error }) => {
           if (error) {
@@ -77,7 +99,7 @@ export function useScheduleStore(initial: ScheduleItem[]): ScheduleStore {
           }
         });
     },
-    [supabase],
+    [supabase, scheduledDate],
   );
 
   const removeItem = useCallback(
