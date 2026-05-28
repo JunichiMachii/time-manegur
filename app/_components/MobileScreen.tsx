@@ -5,6 +5,7 @@ import {
   useEffect,
   useRef,
   useState,
+  useTransition,
   type CSSProperties,
   type ReactNode,
 } from "react";
@@ -73,15 +74,24 @@ export function MobileScreen({
   const [activeTab, setActiveTab] = useState<TabKey>("tasks");
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [calendarOpen, setCalendarOpen] = useState(false);
+  const [isPending, startTransition] = useTransition();
+  // 楽観: ヘッダー日付を即時更新。サーバー再fetch後にeffectiveDateと一致する。
+  const [optimisticDate, setOptimisticDate] = useState<string>(effectiveDate);
+  useEffect(() => {
+    setOptimisticDate(effectiveDate);
+  }, [effectiveDate]);
 
   const handleSelectDate = (date: string) => {
     setCalendarOpen(false);
-    if (date === effectiveDate) return;
-    if (date === todayLocal()) {
-      router.push("/");
-    } else {
-      router.push(`/?date=${date}`);
-    }
+    if (date === optimisticDate) return;
+    setOptimisticDate(date);
+    startTransition(() => {
+      if (date === todayLocal()) {
+        router.push("/");
+      } else {
+        router.push(`/?date=${date}`);
+      }
+    });
   };
   const pagerRef = useRef<HTMLDivElement | null>(null);
   const scrollRafRef = useRef<number | null>(null);
@@ -211,7 +221,7 @@ export function MobileScreen({
         <div style={{ flex: 1, minWidth: 0 }}>
           <DateHeader
             dark={dark}
-            selectedDate={effectiveDate}
+            selectedDate={optimisticDate}
             onClick={() => setCalendarOpen(true)}
           />
         </div>
@@ -357,12 +367,37 @@ export function MobileScreen({
 
       <DateCalendar
         open={calendarOpen}
-        selectedDate={effectiveDate}
+        selectedDate={optimisticDate}
         onSelect={handleSelectDate}
         onClose={() => setCalendarOpen(false)}
         accent={accent}
         dark={dark}
       />
+
+      {isPending && (
+        <div
+          aria-hidden="true"
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
+            height: 2,
+            overflow: "hidden",
+            zIndex: 9999,
+            pointerEvents: "none",
+          }}
+        >
+          <div
+            style={{
+              width: "30%",
+              height: "100%",
+              background: accent,
+              animation: "topProgressSlide 0.9s ease-in-out infinite",
+            }}
+          />
+        </div>
+      )}
     </div>
   );
 }
