@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Script from "next/script";
 import { useState, type FormEvent } from "react";
 
 const ACCENT = "#C4634E";
@@ -14,6 +15,7 @@ const FIELD_BG = "rgba(0,0,0,0.025)";
 type SubmitStatus = "idle" | "submitting" | "submitted" | "error";
 
 const SSFORM_URL = process.env.NEXT_PUBLIC_SSFORM_URL ?? "";
+const RECAPTCHA_SITE_KEY = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY ?? "";
 
 export default function ContactPage() {
   const [status, setStatus] = useState<SubmitStatus>("idle");
@@ -74,6 +76,12 @@ export default function ContactPage() {
         WebkitFontSmoothing: "antialiased",
       }}
     >
+      <Script
+        src="https://www.google.com/recaptcha/api.js"
+        strategy="afterInteractive"
+        async
+        defer
+      />
       <div
         style={{
           maxWidth: 520,
@@ -275,6 +283,21 @@ function ContactForm({
             {errorMsg}
           </div>
         )}
+
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            margin: "6px 0",
+            // reCAPTCHA は 304x78 固定。狭幅端末ではスケール調整
+            transformOrigin: "center",
+          }}
+        >
+          <div
+            className="g-recaptcha"
+            data-sitekey={RECAPTCHA_SITE_KEY}
+          />
+        </div>
 
         <button
           type="submit"
