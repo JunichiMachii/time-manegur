@@ -43,6 +43,32 @@ export function SettingsSheet({
   const [mounted, setMounted] = useState(false);
   const [visible, setVisible] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
+  const [notifPerm, setNotifPerm] = useState<NotificationPermission | "unsupported">(
+    "default",
+  );
+  const [requestingPerm, setRequestingPerm] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (!("Notification" in window)) {
+      setNotifPerm("unsupported");
+      return;
+    }
+    setNotifPerm(Notification.permission);
+  }, [open]);
+
+  const handleRequestNotif = async () => {
+    if (notifPerm === "unsupported" || requestingPerm) return;
+    setRequestingPerm(true);
+    try {
+      const result = await Notification.requestPermission();
+      setNotifPerm(result);
+    } catch (e) {
+      console.error("[notify] requestPermission failed", e);
+    } finally {
+      setRequestingPerm(false);
+    }
+  };
 
   // mount → next frame で visible=true にして滑り込みアニメ
   useEffect(() => {
@@ -213,6 +239,15 @@ export function SettingsSheet({
             borderTop: `1px solid ${divider}`,
           }}
         >
+          <NotificationRow
+            perm={notifPerm}
+            requesting={requestingPerm}
+            onRequest={handleRequestNotif}
+            accent={accent}
+            text={text}
+            muted={muted}
+            divider={divider}
+          />
           <SheetRow
             label="プライバシーポリシー"
             text={text}
@@ -322,6 +357,97 @@ function SheetRow({
     );
   }
   return <div style={baseStyle}>{content}</div>;
+}
+
+type NotificationRowProps = {
+  perm: NotificationPermission | "unsupported";
+  requesting: boolean;
+  onRequest: () => void;
+  accent: string;
+  text: string;
+  muted: string;
+  divider: string;
+};
+
+function NotificationRow({
+  perm,
+  requesting,
+  onRequest,
+  accent,
+  text,
+  muted,
+  divider,
+}: NotificationRowProps) {
+  const status =
+    perm === "unsupported"
+      ? "未対応"
+      : perm === "granted"
+        ? "許可済"
+        : perm === "denied"
+          ? "ブロック中"
+          : "未許可";
+  const showAction = perm === "default";
+  const note =
+    perm === "denied"
+      ? "ブラウザ設定で許可してください"
+      : perm === "unsupported"
+        ? "この端末では通知を使えません"
+        : null;
+
+  return (
+    <div
+      style={{
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
+        padding: "14px 8px",
+        borderBottom: `1px solid ${divider}`,
+        gap: 12,
+      }}
+    >
+      <div style={{ display: "flex", flexDirection: "column", gap: 2, minWidth: 0 }}>
+        <span style={{ fontSize: 15, fontWeight: 500, color: text }}>
+          通知
+        </span>
+        {note && (
+          <span style={{ fontSize: 11.5, color: muted }}>{note}</span>
+        )}
+      </div>
+      {showAction ? (
+        <button
+          type="button"
+          onClick={onRequest}
+          disabled={requesting}
+          style={{
+            appearance: "none",
+            border: 0,
+            background: accent,
+            color: "#FFFFFF",
+            fontSize: 12.5,
+            fontWeight: 700,
+            padding: "8px 14px",
+            borderRadius: 999,
+            cursor: requesting ? "default" : "pointer",
+            opacity: requesting ? 0.6 : 1,
+            fontFamily: "inherit",
+            flexShrink: 0,
+          }}
+        >
+          {requesting ? "確認中…" : "許可する"}
+        </button>
+      ) : (
+        <span
+          style={{
+            fontSize: 13.5,
+            color: perm === "granted" ? accent : muted,
+            fontWeight: perm === "granted" ? 600 : 500,
+          }}
+        >
+          {status}
+        </span>
+      )}
+    </div>
+  );
 }
 
 function ChevronRight({ color }: { color: string }) {

@@ -17,6 +17,7 @@ import { SettingsSheet } from "./SettingsSheet";
 import { TodayTasks } from "./TodayTasks";
 import type { ScheduleItem, Task, UserProfile } from "./types";
 import { todayLocal } from "./dateUtils";
+import { useNotifications } from "./useNotifications";
 import { useScheduleStore } from "./useScheduleStore";
 import { useTasksStore } from "./useTasksStore";
 
@@ -70,6 +71,8 @@ export function MobileScreen({
     effectiveDate,
     userId ?? null,
   );
+
+  useNotifications(items, effectiveDate);
 
   const [activeTab, setActiveTab] = useState<TabKey>("tasks");
   const [settingsOpen, setSettingsOpen] = useState(false);
