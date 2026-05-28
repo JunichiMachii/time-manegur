@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import type { ScheduleItem, ScheduleItemDraft } from "./types";
 
@@ -18,53 +18,37 @@ function sortByTime(items: ScheduleItem[]): ScheduleItem[] {
   return [...items].sort((a, b) => a.time.localeCompare(b.time));
 }
 
-export function useScheduleStore(): ScheduleStore {
-  const [items, setItems] = useState<ScheduleItem[]>([]);
+export function useScheduleStore(initial: ScheduleItem[]): ScheduleStore {
+  const [items, setItems] = useState<ScheduleItem[]>(initial);
+  const supabase = useMemo(() => createClient(), []);
+  const tempIdRef = useRef(-1);
 
-  useEffect(() => {
-    let cancelled = false;
-    const supabase = createClient();
-    (async () => {
-      const { data, error } = await supabase
+  const addItem = useCallback(
+    (draft: ScheduleItemDraft) => {
+      const tempId = tempIdRef.current--;
+      const optimistic: ScheduleItem = { id: tempId, ...draft };
+      setItems((prev) => sortByTime([...prev, optimistic]));
+
+      void supabase
         .from(TABLE)
+        .insert(draft)
         .select(COLUMNS)
-        .order("time", { ascending: true });
-      if (cancelled) return;
-      if (error) {
-        console.error("[schedule] fetch failed", error);
-        return;
-      }
-      setItems((data ?? []) as ScheduleItem[]);
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  const addItem = useCallback((draft: ScheduleItemDraft) => {
-    const tempId = -Date.now();
-    const optimistic: ScheduleItem = { id: tempId, ...draft };
-    setItems((prev) => sortByTime([...prev, optimistic]));
-
-    const supabase = createClient();
-    void supabase
-      .from(TABLE)
-      .insert(draft)
-      .select(COLUMNS)
-      .single()
-      .then(({ data, error }) => {
-        if (error || !data) {
-          console.error("[schedule] insert failed", error);
-          setItems((cur) => cur.filter((t) => t.id !== tempId));
-          return;
-        }
-        setItems((cur) =>
-          sortByTime(
-            cur.map((t) => (t.id === tempId ? (data as ScheduleItem) : t)),
-          ),
-        );
-      });
-  }, []);
+        .single()
+        .then(({ data, error }) => {
+          if (error || !data) {
+            console.error("[schedule] insert failed", error);
+            setItems((cur) => cur.filter((t) => t.id !== tempId));
+            return;
+          }
+          setItems((cur) =>
+            sortByTime(
+              cur.map((t) => (t.id === tempId ? (data as ScheduleItem) : t)),
+            ),
+          );
+        });
+    },
+    [supabase],
+  );
 
   const updateItem = useCallback(
     (id: number, patch: Partial<ScheduleItemDraft>) => {
@@ -79,7 +63,6 @@ export function useScheduleStore(): ScheduleStore {
       if (id < 0 || !prevItem) return; // 楽観挿入中は同期しない
       const snapshot = prevItem;
 
-      const supabase = createClient();
       void supabase
         .from(TABLE)
         .update(patch)
@@ -93,32 +76,34 @@ export function useScheduleStore(): ScheduleStore {
           }
         });
     },
-    [],
+    [supabase],
   );
 
-  const removeItem = useCallback((id: number) => {
-    let removed: ScheduleItem | undefined;
-    setItems((prev) => {
-      removed = prev.find((t) => t.id === id);
-      return prev.filter((t) => t.id !== id);
-    });
-    if (id < 0) return;
-
-    const supabase = createClient();
-    void supabase
-      .from(TABLE)
-      .delete()
-      .eq("id", id)
-      .then(({ error }) => {
-        if (error) {
-          console.error("[schedule] delete failed", error);
-          if (removed) {
-            const restored = removed;
-            setItems((cur) => sortByTime([...cur, restored]));
-          }
-        }
+  const removeItem = useCallback(
+    (id: number) => {
+      let removed: ScheduleItem | undefined;
+      setItems((prev) => {
+        removed = prev.find((t) => t.id === id);
+        return prev.filter((t) => t.id !== id);
       });
-  }, []);
+      if (id < 0) return;
+
+      void supabase
+        .from(TABLE)
+        .delete()
+        .eq("id", id)
+        .then(({ error }) => {
+          if (error) {
+            console.error("[schedule] delete failed", error);
+            if (removed) {
+              const restored = removed;
+              setItems((cur) => sortByTime([...cur, restored]));
+            }
+          }
+        });
+    },
+    [supabase],
+  );
 
   return { items, addItem, updateItem, removeItem };
 }

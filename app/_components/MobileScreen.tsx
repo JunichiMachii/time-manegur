@@ -1,9 +1,17 @@
 "use client";
 
-import type { CSSProperties, ReactNode } from "react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type CSSProperties,
+  type ReactNode,
+} from "react";
 import { DateHeader } from "./DateHeader";
 import { ScheduleTimeline } from "./ScheduleTimeline";
 import { TodayTasks } from "./TodayTasks";
+import type { ScheduleItem, Task } from "./types";
 import { useScheduleStore } from "./useScheduleStore";
 import { useTasksStore } from "./useTasksStore";
 
@@ -14,24 +22,36 @@ type Props = {
   dark?: boolean;
   layoutStyle?: MobileScreenStyle;
   topInset?: number;
+  initialTasks?: Task[];
+  initialItems?: ScheduleItem[];
 };
 
-const TOP_FLEX = 45;
-const BOTTOM_FLEX = 55;
+type TabKey = "tasks" | "schedule";
+
+const TABS: { key: TabKey; label: string }[] = [
+  { key: "tasks", label: "今日やるべきこと" },
+  { key: "schedule", label: "タイムライン" },
+];
 
 export function MobileScreen({
   accent,
   dark = false,
   layoutStyle = "card",
   topInset = 0,
+  initialTasks = [],
+  initialItems = [],
 }: Props) {
-  const { tasks, toggleTask, addTask, removeTask } = useTasksStore();
-  const { items, addItem, updateItem, removeItem } = useScheduleStore();
+  const { tasks, toggleTask, addTask, removeTask } = useTasksStore(initialTasks);
+  const { items, addItem, updateItem, removeItem } = useScheduleStore(initialItems);
+
+  const [activeTab, setActiveTab] = useState<TabKey>("tasks");
+  const pagerRef = useRef<HTMLDivElement | null>(null);
+  const scrollRafRef = useRef<number | null>(null);
 
   const bg = dark ? "#000000" : "#F8F7F5";
   const surfaceBg = dark ? "#1C1C1E" : "#FFFFFF";
   const textColor = dark ? "#F5F5F7" : "#1C1C1E";
-  const dividerColor = dark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)";
+  const mutedColor = dark ? "rgba(245,245,247,0.55)" : "rgba(28,28,30,0.5)";
   const cardShadow = dark
     ? "0 2px 12px rgba(0,0,0,0.3)"
     : "0 1px 8px rgba(0,0,0,0.04), 0 0 0 1px rgba(0,0,0,0.03)";
@@ -80,12 +100,48 @@ export function MobileScreen({
     );
   };
 
-  const sectionStyle = (flex: number, padTop: number, padBottom: number): CSSProperties => ({
-    flex: `${flex} 1 0`,
-    minHeight: 0,
-    paddingTop: padTop,
-    paddingBottom: padBottom,
-  });
+  const scrollToTab = useCallback((tab: TabKey) => {
+    const el = pagerRef.current;
+    if (!el) return;
+    const index = TABS.findIndex((t) => t.key === tab);
+    el.scrollTo({ left: index * el.clientWidth, behavior: "smooth" });
+  }, []);
+
+  const handleTabClick = useCallback(
+    (tab: TabKey) => {
+      setActiveTab(tab);
+      scrollToTab(tab);
+    },
+    [scrollToTab],
+  );
+
+  const handlePagerScroll = useCallback(() => {
+    if (scrollRafRef.current !== null) return;
+    scrollRafRef.current = requestAnimationFrame(() => {
+      scrollRafRef.current = null;
+      const el = pagerRef.current;
+      if (!el || el.clientWidth === 0) return;
+      const index = Math.round(el.scrollLeft / el.clientWidth);
+      const next = TABS[index]?.key;
+      if (next && next !== activeTab) setActiveTab(next);
+    });
+  }, [activeTab]);
+
+  useEffect(() => {
+    return () => {
+      if (scrollRafRef.current !== null) {
+        cancelAnimationFrame(scrollRafRef.current);
+      }
+    };
+  }, []);
+
+  const panelStyle: CSSProperties = {
+    flex: "0 0 100%",
+    width: "100%",
+    height: "100%",
+    scrollSnapAlign: "start",
+    boxSizing: "border-box",
+  };
 
   return (
     <div
@@ -103,45 +159,116 @@ export function MobileScreen({
         boxSizing: "border-box",
       }}
     >
-      <div style={{ paddingTop: 12, paddingBottom: 8, flexShrink: 0 }}>
+      <div style={{ paddingTop: 12, paddingBottom: 4, flexShrink: 0 }}>
         <DateHeader dark={dark} />
       </div>
 
-      <div style={sectionStyle(TOP_FLEX, 12, 20)}>
-        {wrapScrollable(
-          <TodayTasks
-            tasks={tasks}
-            onToggle={toggleTask}
-            onAdd={addTask}
-            onRemove={removeTask}
-            accent={accent}
-            dark={dark}
-            headerBg={headerBg}
-          />,
-        )}
+      <div
+        role="tablist"
+        aria-label="表示切り替え"
+        style={{
+          display: "flex",
+          padding: "0 20px",
+          gap: 4,
+          flexShrink: 0,
+          marginTop: 8,
+          marginBottom: 8,
+        }}
+      >
+        {TABS.map((tab) => {
+          const isActive = tab.key === activeTab;
+          return (
+            <button
+              key={tab.key}
+              type="button"
+              role="tab"
+              aria-selected={isActive}
+              onClick={() => handleTabClick(tab.key)}
+              style={{
+                flex: 1,
+                appearance: "none",
+                background: "transparent",
+                border: "none",
+                padding: "10px 4px 12px",
+                fontFamily: "inherit",
+                fontSize: 14,
+                fontWeight: isActive ? 600 : 500,
+                letterSpacing: "-0.01em",
+                color: isActive ? accent : mutedColor,
+                cursor: "pointer",
+                position: "relative",
+                transition: "color 0.18s ease",
+              }}
+            >
+              {tab.label}
+              <span
+                aria-hidden
+                style={{
+                  position: "absolute",
+                  left: "50%",
+                  bottom: 0,
+                  transform: `translateX(-50%) scaleX(${isActive ? 1 : 0})`,
+                  transformOrigin: "center",
+                  width: 28,
+                  height: 2,
+                  borderRadius: 2,
+                  background: accent,
+                  transition: "transform 0.22s ease",
+                }}
+              />
+            </button>
+          );
+        })}
       </div>
 
       <div
+        ref={pagerRef}
+        onScroll={handlePagerScroll}
+        className="hide-scrollbar"
         style={{
-          height: 1,
-          margin: "0 20px",
-          background: dividerColor,
-          flexShrink: 0,
+          flex: "1 1 0",
+          minHeight: 0,
+          display: "flex",
+          flexDirection: "row",
+          overflowX: "auto",
+          overflowY: "hidden",
+          scrollSnapType: "x mandatory",
+          scrollBehavior: "smooth",
+          WebkitOverflowScrolling: "touch",
+          overscrollBehaviorX: "contain",
         }}
-      />
+      >
+        <div style={panelStyle}>
+          <div style={{ height: "100%", paddingTop: 8, paddingBottom: 24, boxSizing: "border-box" }}>
+            {wrapScrollable(
+              <TodayTasks
+                tasks={tasks}
+                onToggle={toggleTask}
+                onAdd={addTask}
+                onRemove={removeTask}
+                accent={accent}
+                dark={dark}
+                headerBg={headerBg}
+              />,
+            )}
+          </div>
+        </div>
 
-      <div style={sectionStyle(BOTTOM_FLEX, 20, 40)}>
-        {wrapScrollable(
-          <ScheduleTimeline
-            items={items}
-            onAdd={addItem}
-            onUpdate={updateItem}
-            onRemove={removeItem}
-            accent={accent}
-            dark={dark}
-            headerBg={headerBg}
-          />,
-        )}
+        <div style={panelStyle}>
+          <div style={{ height: "100%", paddingTop: 8, paddingBottom: 24, boxSizing: "border-box" }}>
+            {wrapScrollable(
+              <ScheduleTimeline
+                items={items}
+                onAdd={addItem}
+                onUpdate={updateItem}
+                onRemove={removeItem}
+                accent={accent}
+                dark={dark}
+                headerBg={headerBg}
+              />,
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );
