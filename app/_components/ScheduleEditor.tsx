@@ -38,8 +38,8 @@ function parseHHMM(s: string): { h: number; m: number } {
 }
 
 function nowHHMM(): { h: number; m: number } {
-  const d = new Date();
-  return { h: d.getHours(), m: d.getMinutes() };
+  // 分は 0 に固定（未操作時に意図しない現在分が入るのを防ぐ）
+  return { h: new Date().getHours(), m: 0 };
 }
 
 export function ScheduleEditor({
@@ -140,9 +140,9 @@ function ScheduleForm({
   const [hour, setHour] = useState<number>(initialTime.h);
   const [minute, setMinute] = useState<number>(initialTime.m);
 
-  // 所要時間スロット: 編集時は item.duration_minutes を分解。新規は30分。
+  // 所要時間スロット: 編集時は item.duration_minutes を分解。新規は 0 (未指定)。
   const initialDuration =
-    mode.kind === "edit" ? mode.item.duration_minutes : 30;
+    mode.kind === "edit" ? mode.item.duration_minutes : 0;
   const [durHours, setDurHours] = useState<number>(
     Math.floor(initialDuration / 60),
   );
@@ -157,7 +157,7 @@ function ScheduleForm({
     e.preventDefault();
     const trimmed = title.trim();
     if (!trimmed) return;
-    const totalDuration = Math.max(1, durHours * 60 + durMinutes);
+    const totalDuration = Math.max(0, durHours * 60 + durMinutes);
     const notify = Math.max(0, parseInt(notifyText, 10) || 0);
     onSave({
       time: `${pad2(hour)}:${pad2(minute)}`,

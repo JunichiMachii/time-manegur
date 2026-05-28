@@ -212,15 +212,17 @@ function TimelineItem({
             marginTop: 3,
           }}
         >
-          <span
-            style={{
-              fontSize: 12,
-              color: secondaryColor,
-              fontWeight: 400,
-            }}
-          >
-            {formatDuration(item.duration_minutes)}
-          </span>
+          {item.duration_minutes > 0 && (
+            <span
+              style={{
+                fontSize: 12,
+                color: secondaryColor,
+                fontWeight: 400,
+              }}
+            >
+              {formatDuration(item.duration_minutes)}
+            </span>
+          )}
           {item.notify_minutes_before > 0 && (
             <span
               style={{
