@@ -35,6 +35,18 @@ export default function ContactPage() {
       return;
     }
 
+    // reCAPTCHA ウィジェットが注入する hidden textarea からトークン取得
+    const recaptchaResponse =
+      (document.getElementById("g-recaptcha-response") as
+        | HTMLTextAreaElement
+        | null)?.value ?? "";
+
+    if (!recaptchaResponse) {
+      setErrorMsg("「私はロボットではありません」にチェックを入れてください。");
+      setStatus("error");
+      return;
+    }
+
     setStatus("submitting");
     setErrorMsg(null);
 
@@ -42,6 +54,7 @@ export default function ContactPage() {
     fd.append("name", name);
     fd.append("email", email);
     fd.append("message", message);
+    fd.append("g-recaptcha-response", recaptchaResponse);
 
     try {
       // SSForm はクロスオリジン応答ヘッダを返さないため no-cors で投げる。
@@ -58,6 +71,9 @@ export default function ContactPage() {
         "送信に失敗しました。通信状態をご確認のうえ、もう一度お試しください。",
       );
       setStatus("error");
+      // 失敗時はトークン使い回せないので reCAPTCHA をリセット
+      const g = (window as { grecaptcha?: { reset?: () => void } }).grecaptcha;
+      g?.reset?.();
     }
   };
 
