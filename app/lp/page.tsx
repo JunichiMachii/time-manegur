@@ -18,7 +18,11 @@ export default function LandingPage() {
   return (
     <main
       style={{
-        minHeight: "100dvh",
+        height: "100dvh",
+        overflowY: "auto",
+        overflowX: "hidden",
+        WebkitOverflowScrolling: "touch",
+        overscrollBehaviorY: "contain",
         background: BG,
         color: TEXT,
         fontFamily:
