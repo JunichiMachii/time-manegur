@@ -7,7 +7,7 @@ import { createClient } from "@/lib/supabase/client";
 import type { UserProfile } from "./types";
 
 const APP_VERSION = "v1.1.0";
-const PRIVACY_POLICY_URL = "https://time-manegur.vercel.app/privacy";
+const PRIVACY_POLICY_URL = "/lp#privacy";
 
 async function clearClientCaches(): Promise<void> {
   try {
@@ -255,7 +255,6 @@ export function SettingsSheet({
             divider={divider}
             hoverBg={rowHover}
             href={PRIVACY_POLICY_URL}
-            external
           />
           <SheetRow
             label="アプリバージョン"

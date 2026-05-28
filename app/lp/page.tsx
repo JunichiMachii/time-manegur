@@ -1,0 +1,513 @@
+import Link from "next/link";
+import type { Metadata } from "next";
+
+const ACCENT = "#C4634E";
+const BG = "#F8F7F5";
+const TEXT = "#1C1C1E";
+const MUTED = "#8E8E93";
+const SURFACE = "#FFFFFF";
+const SUBTLE_BORDER = "rgba(0,0,0,0.06)";
+
+export const metadata: Metadata = {
+  title: "time-manegur — 開いた瞬間に今日が決まる時間管理アプリ",
+  description:
+    "毎日固定の習慣化と、親指1本で完結する横スワイプUI。今日やるべきことと決まった時間にやることを1画面で。",
+};
+
+export default function LandingPage() {
+  return (
+    <main
+      style={{
+        minHeight: "100dvh",
+        background: BG,
+        color: TEXT,
+        fontFamily:
+          "var(--font-zen-kaku), -apple-system, system-ui, sans-serif",
+        WebkitFontSmoothing: "antialiased",
+      }}
+    >
+      <div
+        style={{
+          maxWidth: 640,
+          margin: "0 auto",
+          padding:
+            "calc(env(safe-area-inset-top, 0px) + 56px) 24px 80px",
+        }}
+      >
+        <Header />
+        <Hero />
+        <CTA />
+        <Features />
+        <BottomCTA />
+        <PrivacySection />
+        <Footer />
+      </div>
+    </main>
+  );
+}
+
+function Header() {
+  return (
+    <div
+      style={{
+        display: "flex",
+        alignItems: "center",
+        gap: 10,
+        marginBottom: 48,
+      }}
+    >
+      <div
+        style={{
+          width: 36,
+          height: 36,
+          borderRadius: 10,
+          background: ACCENT,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          boxShadow: `0 4px 12px ${ACCENT}33`,
+        }}
+        aria-hidden="true"
+      >
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+          <circle cx="12" cy="12" r="9" stroke="#fff" strokeWidth="1.8" />
+          <path
+            d="M12 7v5l3 2"
+            stroke="#fff"
+            strokeWidth="1.8"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
+      </div>
+      <span
+        style={{
+          fontSize: 16,
+          fontWeight: 700,
+          letterSpacing: "-0.01em",
+        }}
+      >
+        time-manegur
+      </span>
+    </div>
+  );
+}
+
+function Hero() {
+  return (
+    <section style={{ marginBottom: 40 }}>
+      <h1
+        style={{
+          fontSize: 40,
+          fontWeight: 800,
+          letterSpacing: "-0.03em",
+          lineHeight: 1.15,
+          margin: 0,
+          marginBottom: 20,
+        }}
+      >
+        開いた瞬間に
+        <br />
+        <span style={{ color: ACCENT }}>今日が決まる</span>。
+      </h1>
+      <p
+        style={{
+          fontSize: 16,
+          lineHeight: 1.75,
+          color: "rgba(28,28,30,0.7)",
+          margin: 0,
+          maxWidth: 480,
+        }}
+      >
+        今日やるべきことと、決まった時間にやることを、ひとつの画面に。
+        親指1本の横スワイプで、迷いも探し物もない。
+        習慣を、自然に積み重ねるための時間管理アプリ。
+      </p>
+    </section>
+  );
+}
+
+function CTA() {
+  return (
+    <section style={{ marginBottom: 64 }}>
+      <Link
+        href="/login"
+        style={{
+          display: "inline-flex",
+          alignItems: "center",
+          gap: 10,
+          background: ACCENT,
+          color: "#FFFFFF",
+          fontSize: 15,
+          fontWeight: 700,
+          padding: "14px 24px",
+          borderRadius: 999,
+          textDecoration: "none",
+          boxShadow: `0 8px 20px ${ACCENT}40`,
+          transition: "transform 0.15s ease, box-shadow 0.15s ease",
+        }}
+      >
+        アプリを始める
+        <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true">
+          <path
+            d="M3 7h8M7.5 3.5L11 7l-3.5 3.5"
+            stroke="currentColor"
+            strokeWidth="1.6"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            fill="none"
+          />
+        </svg>
+      </Link>
+      <div
+        style={{
+          fontSize: 12,
+          color: MUTED,
+          marginTop: 12,
+          lineHeight: 1.6,
+        }}
+      >
+        Googleアカウントで30秒で始められます
+      </div>
+    </section>
+  );
+}
+
+function Features() {
+  const items: { title: string; body: string; icon: React.ReactNode }[] = [
+    {
+      title: "毎日固定の習慣化",
+      body: "朝のストレッチ、夕方の振り返り。毎日決まった時間に必ず現れる予定として固定。考える隙を作らず、続けることに集中できる。",
+      icon: <IconRepeat />,
+    },
+    {
+      title: "親指1本の横スワイプUI",
+      body: "「タスク」と「タイムライン」を横スワイプで行き来。電車内でも片手で完結する設計。",
+      icon: <IconSwipe />,
+    },
+    {
+      title: "今日が一目で完結",
+      body: "余計な装飾や階層なし。日付ヘッダから別日も呼び出せる。今日のことだけを、今日の画面で。",
+      icon: <IconFocus />,
+    },
+  ];
+  return (
+    <section
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        gap: 14,
+        marginBottom: 64,
+      }}
+    >
+      {items.map((f) => (
+        <article
+          key={f.title}
+          style={{
+            background: SURFACE,
+            borderRadius: 18,
+            padding: "20px 22px",
+            boxShadow:
+              "0 1px 3px rgba(0,0,0,0.04), 0 1px 0 rgba(0,0,0,0.02)",
+            display: "flex",
+            gap: 14,
+            alignItems: "flex-start",
+          }}
+        >
+          <div
+            style={{
+              width: 38,
+              height: 38,
+              borderRadius: 10,
+              background: `${ACCENT}14`,
+              color: ACCENT,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              flexShrink: 0,
+            }}
+            aria-hidden="true"
+          >
+            {f.icon}
+          </div>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <h3
+              style={{
+                fontSize: 15.5,
+                fontWeight: 700,
+                margin: 0,
+                marginBottom: 6,
+                letterSpacing: "-0.01em",
+              }}
+            >
+              {f.title}
+            </h3>
+            <p
+              style={{
+                fontSize: 13.5,
+                color: "rgba(28,28,30,0.65)",
+                margin: 0,
+                lineHeight: 1.7,
+              }}
+            >
+              {f.body}
+            </p>
+          </div>
+        </article>
+      ))}
+    </section>
+  );
+}
+
+function BottomCTA() {
+  return (
+    <section
+      style={{
+        textAlign: "center",
+        marginBottom: 64,
+        padding: "32px 24px",
+        background: SURFACE,
+        borderRadius: 20,
+        boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
+      }}
+    >
+      <div
+        style={{
+          fontSize: 18,
+          fontWeight: 700,
+          marginBottom: 16,
+          letterSpacing: "-0.01em",
+        }}
+      >
+        今日から、時間に追われない。
+      </div>
+      <Link
+        href="/login"
+        style={{
+          display: "inline-flex",
+          alignItems: "center",
+          gap: 8,
+          background: ACCENT,
+          color: "#FFFFFF",
+          fontSize: 14.5,
+          fontWeight: 700,
+          padding: "13px 22px",
+          borderRadius: 999,
+          textDecoration: "none",
+          boxShadow: `0 6px 16px ${ACCENT}40`,
+        }}
+      >
+        ログイン画面へ
+        <svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true">
+          <path
+            d="M2.5 6h7M6.5 3l3 3-3 3"
+            stroke="currentColor"
+            strokeWidth="1.6"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            fill="none"
+          />
+        </svg>
+      </Link>
+    </section>
+  );
+}
+
+function PrivacySection() {
+  return (
+    <section style={{ marginBottom: 32 }} id="privacy">
+      <details
+        style={{
+          background: SURFACE,
+          borderRadius: 16,
+          border: `1px solid ${SUBTLE_BORDER}`,
+          overflow: "hidden",
+        }}
+      >
+        <summary
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            padding: "18px 20px",
+            cursor: "pointer",
+            listStyle: "none",
+            fontSize: 15,
+            fontWeight: 700,
+            color: TEXT,
+          }}
+        >
+          <span>プライバシーポリシー</span>
+          <svg
+            width="14"
+            height="14"
+            viewBox="0 0 14 14"
+            aria-hidden="true"
+            style={{ color: MUTED }}
+          >
+            <path
+              d="M3 5l4 4 4-4"
+              stroke="currentColor"
+              strokeWidth="1.6"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              fill="none"
+            />
+          </svg>
+        </summary>
+        <div
+          style={{
+            padding: "0 20px 20px",
+            fontSize: 13,
+            lineHeight: 1.85,
+            color: "rgba(28,28,30,0.78)",
+            borderTop: `1px solid ${SUBTLE_BORDER}`,
+          }}
+        >
+          <PolicyHeading>1. 取得する情報</PolicyHeading>
+          <p>
+            本アプリは、Googleアカウントによるログイン時に以下の情報を取得します。
+          </p>
+          <ul>
+            <li>表示名 (Google プロフィール名)</li>
+            <li>メールアドレス</li>
+            <li>プロフィール画像URL</li>
+            <li>ユーザー固有ID (Google発行)</li>
+          </ul>
+          <p>
+            また、アプリ利用中に作成したタスク・スケジュールの内容、設定情報をデータベースに保存します。
+          </p>
+
+          <PolicyHeading>2. 情報の利用目的</PolicyHeading>
+          <p>取得した情報は、以下の目的のみに利用します。</p>
+          <ul>
+            <li>本アプリの機能 (ログイン、データ表示、編集) の提供</li>
+            <li>ユーザーごとのデータ分離・保護</li>
+            <li>不具合調査のためのエラーログ記録</li>
+          </ul>
+
+          <PolicyHeading>3. 保存場所と保護</PolicyHeading>
+          <p>
+            データは Supabase Inc. が提供するクラウドサーバーに保存されます。
+            通信は TLS で暗号化され、データベースには Row Level Security
+            (RLS) を適用し、自分のアカウントで作成したデータのみアクセスできるよう設計しています。
+          </p>
+
+          <PolicyHeading>4. 第三者提供</PolicyHeading>
+          <p>
+            法令に基づく場合を除き、取得した情報を第三者に販売・譲渡することはありません。
+            ホスティング (Vercel)、認証 (Google / Supabase Auth)、データベース (Supabase) など、
+            サービス提供に必要な範囲でのみ、各事業者の利用規約・プライバシーポリシーに従い情報を委託処理します。
+          </p>
+
+          <PolicyHeading>5. データの削除</PolicyHeading>
+          <p>
+            アプリ内の「ログアウト」でセッションが終了します。
+            アカウント自体および関連データの完全削除を希望される場合は、運営者までご連絡ください。
+            アカウント削除時、関連するタスク・スケジュールも自動的に削除されます。
+          </p>
+
+          <PolicyHeading>6. Cookie と類似技術</PolicyHeading>
+          <p>
+            ログイン状態の維持のため、Supabase Auth が発行する Cookie を使用します。
+            広告配信目的の追跡 Cookie は使用していません。
+          </p>
+
+          <PolicyHeading>7. 変更</PolicyHeading>
+          <p>
+            本ポリシーは、サービス内容の変更や法令対応のため、予告なく改定することがあります。
+            重大な変更時はアプリ内でお知らせします。
+          </p>
+
+          <PolicyHeading>8. お問い合わせ</PolicyHeading>
+          <p>
+            本ポリシーに関するお問い合わせは、アプリ運営者までご連絡ください。
+          </p>
+
+          <p
+            style={{
+              marginTop: 24,
+              fontSize: 11.5,
+              color: MUTED,
+            }}
+          >
+            最終更新日: 2026年5月28日
+          </p>
+        </div>
+      </details>
+    </section>
+  );
+}
+
+function PolicyHeading({ children }: { children: React.ReactNode }) {
+  return (
+    <h4
+      style={{
+        fontSize: 13.5,
+        fontWeight: 700,
+        color: TEXT,
+        margin: "20px 0 6px",
+        letterSpacing: "-0.005em",
+      }}
+    >
+      {children}
+    </h4>
+  );
+}
+
+function Footer() {
+  return (
+    <footer
+      style={{
+        textAlign: "center",
+        fontSize: 11.5,
+        color: MUTED,
+        paddingTop: 16,
+      }}
+    >
+      © {new Date().getFullYear()} time-manegur
+    </footer>
+  );
+}
+
+function IconRepeat() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+      <path
+        d="M17 1l4 4-4 4M3 11V9a4 4 0 0 1 4-4h14M7 23l-4-4 4-4M21 13v2a4 4 0 0 1-4 4H3"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+function IconSwipe() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+      <path
+        d="M9 18L3 12l6-6M15 6l6 6-6 6M3 12h18"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+function IconFocus() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+      <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="1.8" />
+      <path
+        d="M12 2v3M12 19v3M2 12h3M19 12h3M4.93 4.93l2.12 2.12M16.95 16.95l2.12 2.12M4.93 19.07l2.12-2.12M16.95 7.05l2.12-2.12"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
