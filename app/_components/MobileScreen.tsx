@@ -10,8 +10,9 @@ import {
 } from "react";
 import { DateHeader } from "./DateHeader";
 import { ScheduleTimeline } from "./ScheduleTimeline";
+import { SettingsSheet } from "./SettingsSheet";
 import { TodayTasks } from "./TodayTasks";
-import type { ScheduleItem, Task } from "./types";
+import type { ScheduleItem, Task, UserProfile } from "./types";
 import { useScheduleStore } from "./useScheduleStore";
 import { useTasksStore } from "./useTasksStore";
 
@@ -24,6 +25,13 @@ type Props = {
   topInset?: number;
   initialTasks?: Task[];
   initialItems?: ScheduleItem[];
+  userProfile?: UserProfile;
+};
+
+const EMPTY_PROFILE: UserProfile = {
+  email: null,
+  name: null,
+  avatarUrl: null,
 };
 
 type TabKey = "tasks" | "schedule";
@@ -40,11 +48,13 @@ export function MobileScreen({
   topInset = 0,
   initialTasks = [],
   initialItems = [],
+  userProfile = EMPTY_PROFILE,
 }: Props) {
   const { tasks, toggleTask, addTask, removeTask } = useTasksStore(initialTasks);
   const { items, addItem, updateItem, removeItem } = useScheduleStore(initialItems);
 
   const [activeTab, setActiveTab] = useState<TabKey>("tasks");
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const pagerRef = useRef<HTMLDivElement | null>(null);
   const scrollRafRef = useRef<number | null>(null);
 
@@ -159,8 +169,42 @@ export function MobileScreen({
         boxSizing: "border-box",
       }}
     >
-      <div style={{ paddingTop: 12, paddingBottom: 4, flexShrink: 0 }}>
-        <DateHeader dark={dark} />
+      <div
+        style={{
+          paddingTop: 12,
+          paddingBottom: 4,
+          paddingRight: 12,
+          flexShrink: 0,
+          display: "flex",
+          alignItems: "flex-start",
+          gap: 8,
+        }}
+      >
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <DateHeader dark={dark} />
+        </div>
+        <button
+          type="button"
+          onClick={() => setSettingsOpen(true)}
+          aria-label="設定を開く"
+          style={{
+            appearance: "none",
+            border: 0,
+            background: "transparent",
+            padding: 10,
+            margin: "-2px -4px 0 0",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            cursor: "pointer",
+            color: dark ? "rgba(245,245,247,0.65)" : "rgba(28,28,30,0.55)",
+            borderRadius: 12,
+            transition: "color 0.18s ease, background 0.18s ease",
+            WebkitTapHighlightColor: "transparent",
+          }}
+        >
+          <GearIcon />
+        </button>
       </div>
 
       <div
@@ -270,6 +314,38 @@ export function MobileScreen({
           </div>
         </div>
       </div>
+
+      <SettingsSheet
+        open={settingsOpen}
+        onClose={() => setSettingsOpen(false)}
+        user={userProfile}
+        accent={accent}
+        dark={dark}
+      />
     </div>
+  );
+}
+
+function GearIcon() {
+  return (
+    <svg
+      width="22"
+      height="22"
+      viewBox="0 0 24 24"
+      fill="none"
+      aria-hidden="true"
+    >
+      <path
+        d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7z"
+        stroke="currentColor"
+        strokeWidth="1.6"
+      />
+      <path
+        d="M19.4 14.6a1 1 0 0 0 .2 1.1l.1.1a1.7 1.7 0 1 1-2.4 2.4l-.1-.1a1 1 0 0 0-1.1-.2 1 1 0 0 0-.6.9V19a1.7 1.7 0 0 1-3.4 0v-.1a1 1 0 0 0-.7-.9 1 1 0 0 0-1.1.2l-.1.1a1.7 1.7 0 1 1-2.4-2.4l.1-.1a1 1 0 0 0 .2-1.1 1 1 0 0 0-.9-.6H7a1.7 1.7 0 0 1 0-3.4h.1a1 1 0 0 0 .9-.7 1 1 0 0 0-.2-1.1l-.1-.1a1.7 1.7 0 1 1 2.4-2.4l.1.1a1 1 0 0 0 1.1.2h.1a1 1 0 0 0 .6-.9V5a1.7 1.7 0 0 1 3.4 0v.1a1 1 0 0 0 .6.9 1 1 0 0 0 1.1-.2l.1-.1a1.7 1.7 0 1 1 2.4 2.4l-.1.1a1 1 0 0 0-.2 1.1v.1a1 1 0 0 0 .9.6H19a1.7 1.7 0 0 1 0 3.4h-.1a1 1 0 0 0-.9.6z"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinejoin="round"
+      />
+    </svg>
   );
 }

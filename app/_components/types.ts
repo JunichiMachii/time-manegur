@@ -14,6 +14,12 @@ export type ScheduleItem = {
   is_recurring: boolean;
 };
 
+export type UserProfile = {
+  email: string | null;
+  name: string | null;
+  avatarUrl: string | null;
+};
+
 export type ScheduleItemDraft = {
   time: string;
   title: string;
