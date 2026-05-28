@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Zen_Kaku_Gothic_New } from "next/font/google";
 import "./globals.css";
+import { OfflineBanner } from "./_components/OfflineBanner";
 import { ServiceWorkerRegister } from "./_components/ServiceWorkerRegister";
 
 const zenKaku = Zen_Kaku_Gothic_New({
@@ -41,6 +42,7 @@ export default function RootLayout({
     <html lang="ja" className={`${zenKaku.variable} h-full antialiased`}>
       <body className="min-h-full">
         {children}
+        <OfflineBanner />
         <ServiceWorkerRegister />
       </body>
     </html>
