@@ -37,7 +37,7 @@ const EMPTY_PROFILE: UserProfile = {
 type TabKey = "tasks" | "schedule";
 
 const TABS: { key: TabKey; label: string }[] = [
-  { key: "tasks", label: "今日やるべきこと" },
+  { key: "tasks", label: "タスク" },
   { key: "schedule", label: "タイムライン" },
 ];
 
@@ -186,7 +186,7 @@ export function MobileScreen({
         <button
           type="button"
           onClick={() => setSettingsOpen(true)}
-          aria-label="設定を開く"
+          aria-label="メニューを開く"
           style={{
             appearance: "none",
             border: 0,
@@ -203,7 +203,7 @@ export function MobileScreen({
             WebkitTapHighlightColor: "transparent",
           }}
         >
-          <GearIcon />
+          <MenuIcon />
         </button>
       </div>
 
@@ -326,7 +326,7 @@ export function MobileScreen({
   );
 }
 
-function GearIcon() {
+function MenuIcon() {
   return (
     <svg
       width="22"
@@ -336,15 +336,10 @@ function GearIcon() {
       aria-hidden="true"
     >
       <path
-        d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7z"
+        d="M4 7h16M4 12h16M4 17h16"
         stroke="currentColor"
-        strokeWidth="1.6"
-      />
-      <path
-        d="M19.4 14.6a1 1 0 0 0 .2 1.1l.1.1a1.7 1.7 0 1 1-2.4 2.4l-.1-.1a1 1 0 0 0-1.1-.2 1 1 0 0 0-.6.9V19a1.7 1.7 0 0 1-3.4 0v-.1a1 1 0 0 0-.7-.9 1 1 0 0 0-1.1.2l-.1.1a1.7 1.7 0 1 1-2.4-2.4l.1-.1a1 1 0 0 0 .2-1.1 1 1 0 0 0-.9-.6H7a1.7 1.7 0 0 1 0-3.4h.1a1 1 0 0 0 .9-.7 1 1 0 0 0-.2-1.1l-.1-.1a1.7 1.7 0 1 1 2.4-2.4l.1.1a1 1 0 0 0 1.1.2h.1a1 1 0 0 0 .6-.9V5a1.7 1.7 0 0 1 3.4 0v.1a1 1 0 0 0 .6.9 1 1 0 0 0 1.1-.2l.1-.1a1.7 1.7 0 1 1 2.4 2.4l-.1.1a1 1 0 0 0-.2 1.1v.1a1 1 0 0 0 .9.6H19a1.7 1.7 0 0 1 0 3.4h-.1a1 1 0 0 0-.9.6z"
-        stroke="currentColor"
-        strokeWidth="1.6"
-        strokeLinejoin="round"
+        strokeWidth="1.8"
+        strokeLinecap="round"
       />
     </svg>
   );

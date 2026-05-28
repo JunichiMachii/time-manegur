@@ -225,7 +225,7 @@ export function SettingsSheet({
             appearance: "none",
             border: 0,
             background: "transparent",
-            color: "#FF3B30",
+            color: accent,
             fontSize: 15,
             fontWeight: 700,
             fontFamily: "inherit",
