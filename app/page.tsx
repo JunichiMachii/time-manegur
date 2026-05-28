@@ -15,9 +15,12 @@ export default async function Home() {
       .from("tasks")
       .select("id, title, tag, done")
       .order("id", { ascending: true }),
+    // 毎日固定（is_recurring=true）+ その他の予定を時間順で取得
     supabase
       .from("schedule_items")
-      .select("id, time, title, duration_minutes, notify_minutes_before")
+      .select(
+        "id, time, title, duration_minutes, notify_minutes_before, is_recurring",
+      )
       .order("time", { ascending: true }),
   ]);
 

@@ -5,7 +5,8 @@ import { createClient } from "@/lib/supabase/client";
 import type { ScheduleItem, ScheduleItemDraft } from "./types";
 
 const TABLE = "schedule_items";
-const COLUMNS = "id, time, title, duration_minutes, notify_minutes_before";
+const COLUMNS =
+  "id, time, title, duration_minutes, notify_minutes_before, is_recurring";
 
 export type ScheduleStore = {
   items: ScheduleItem[];

@@ -11,6 +11,7 @@ export type ScheduleItem = {
   title: string;
   duration_minutes: number;
   notify_minutes_before: number;
+  is_recurring: boolean;
 };
 
 export type ScheduleItemDraft = {
@@ -18,4 +19,5 @@ export type ScheduleItemDraft = {
   title: string;
   duration_minutes: number;
   notify_minutes_before: number;
+  is_recurring: boolean;
 };

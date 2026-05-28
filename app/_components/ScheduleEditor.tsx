@@ -27,6 +27,7 @@ const EMPTY: ScheduleItemDraft = {
   title: "",
   duration_minutes: 30,
   notify_minutes_before: 0,
+  is_recurring: false,
 };
 
 export function ScheduleEditor({
@@ -118,6 +119,7 @@ function ScheduleForm({
           title: mode.item.title,
           duration_minutes: mode.item.duration_minutes,
           notify_minutes_before: mode.item.notify_minutes_before,
+          is_recurring: mode.item.is_recurring,
         }
       : EMPTY,
   );
@@ -134,6 +136,7 @@ function ScheduleForm({
         0,
         Math.floor(draft.notify_minutes_before),
       ),
+      is_recurring: draft.is_recurring,
     });
     onClose();
   };
@@ -295,6 +298,70 @@ function ScheduleForm({
           />
         </div>
       </div>
+
+      <label
+        htmlFor={`${titleId}-recur`}
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          gap: 12,
+          padding: "12px 14px",
+          borderRadius: 12,
+          background: fieldBg,
+          border: `1px solid ${border}`,
+          cursor: "pointer",
+          userSelect: "none",
+        }}
+      >
+        <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+          <span style={{ fontSize: 14, fontWeight: 600, color: text }}>
+            毎日固定にする
+          </span>
+          <span style={{ fontSize: 11, color: muted, lineHeight: 1.5 }}>
+            毎日同じ時間にやることとして固定表示します
+          </span>
+        </div>
+        <input
+          id={`${titleId}-recur`}
+          type="checkbox"
+          checked={draft.is_recurring}
+          onChange={(e) =>
+            setDraft((d) => ({ ...d, is_recurring: e.target.checked }))
+          }
+          style={{
+            position: "absolute",
+            opacity: 0,
+            pointerEvents: "none",
+          }}
+        />
+        <span
+          aria-hidden="true"
+          style={{
+            position: "relative",
+            width: 40,
+            height: 24,
+            borderRadius: 999,
+            background: draft.is_recurring ? accent : dark ? "#48484A" : "#D1D1D6",
+            transition: "background 0.18s ease",
+            flexShrink: 0,
+          }}
+        >
+          <span
+            style={{
+              position: "absolute",
+              top: 2,
+              left: draft.is_recurring ? 18 : 2,
+              width: 20,
+              height: 20,
+              borderRadius: "50%",
+              background: "#FFFFFF",
+              boxShadow: "0 1px 3px rgba(0,0,0,0.18)",
+              transition: "left 0.18s ease",
+            }}
+          />
+        </span>
+      </label>
 
       <div
         style={{
