@@ -463,9 +463,25 @@ function Footer() {
         fontSize: 11.5,
         color: MUTED,
         paddingTop: 16,
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        gap: 8,
       }}
     >
-      © {new Date().getFullYear()} time-manegur
+      <a
+        href="#privacy"
+        style={{
+          color: MUTED,
+          textDecoration: "none",
+          borderBottom: `1px solid ${SUBTLE_BORDER}`,
+          paddingBottom: 1,
+          fontWeight: 500,
+        }}
+      >
+        プライバシーポリシー
+      </a>
+      <span>© {new Date().getFullYear()} time-manegur</span>
     </footer>
   );
 }
