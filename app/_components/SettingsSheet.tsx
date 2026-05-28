@@ -249,6 +249,14 @@ export function SettingsSheet({
             divider={divider}
           />
           <SheetRow
+            label="お問い合わせ"
+            text={text}
+            muted={muted}
+            divider={divider}
+            hoverBg={rowHover}
+            href="/contact"
+          />
+          <SheetRow
             label="プライバシーポリシー"
             text={text}
             muted={muted}

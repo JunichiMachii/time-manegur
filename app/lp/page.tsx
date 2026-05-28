@@ -455,18 +455,38 @@ function Footer() {
         gap: 8,
       }}
     >
-      <a
-        href="#privacy"
+      <div
         style={{
-          color: MUTED,
-          textDecoration: "none",
-          borderBottom: `1px solid ${SUBTLE_BORDER}`,
-          paddingBottom: 1,
-          fontWeight: 500,
+          display: "flex",
+          alignItems: "center",
+          gap: 16,
         }}
       >
-        プライバシーポリシー
-      </a>
+        <Link
+          href="/contact"
+          style={{
+            color: MUTED,
+            textDecoration: "none",
+            borderBottom: `1px solid ${SUBTLE_BORDER}`,
+            paddingBottom: 1,
+            fontWeight: 500,
+          }}
+        >
+          お問い合わせ
+        </Link>
+        <a
+          href="#privacy"
+          style={{
+            color: MUTED,
+            textDecoration: "none",
+            borderBottom: `1px solid ${SUBTLE_BORDER}`,
+            paddingBottom: 1,
+            fontWeight: 500,
+          }}
+        >
+          プライバシーポリシー
+        </a>
+      </div>
       <span>© {new Date().getFullYear()} time-manegur</span>
     </footer>
   );
