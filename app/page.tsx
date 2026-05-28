@@ -16,6 +16,10 @@ export default async function Home({
   const supabase = await createClient();
   const { data } = await supabase.auth.getClaims();
   if (!data?.claims) redirect("/login");
+  // Defense-in-Depth: RLSに加えてアプリ層でもユーザーIDで絞り込む
+  const userId =
+    typeof data.claims.sub === "string" ? data.claims.sub : null;
+  if (!userId) redirect("/login");
 
   const { data: userData } = await supabase.auth.getUser();
   const meta = (userData.user?.user_metadata ?? {}) as Record<string, unknown>;
@@ -41,6 +45,7 @@ export default async function Home({
     supabase
       .from("tasks")
       .select("id, title, tag, done, scheduled_date")
+      .eq("user_id", userId)
       .eq("scheduled_date", selectedDate)
       .order("id", { ascending: true }),
     // 毎日固定（is_recurring=true）+ 選択日のその他の予定を時間順で取得
@@ -49,6 +54,7 @@ export default async function Home({
       .select(
         "id, time, title, duration_minutes, notify_minutes_before, is_recurring, scheduled_date",
       )
+      .eq("user_id", userId)
       .or(`is_recurring.eq.true,scheduled_date.eq.${selectedDate}`)
       .order("time", { ascending: true }),
   ]);
@@ -77,6 +83,7 @@ export default async function Home({
         initialItems={initialItems}
         userProfile={userProfile}
         selectedDate={selectedDate}
+        userId={userId}
       />
     </main>
   );

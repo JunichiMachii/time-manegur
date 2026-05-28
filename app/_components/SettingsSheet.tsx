@@ -9,6 +9,21 @@ import type { UserProfile } from "./types";
 const APP_VERSION = "v1.1.0";
 const PRIVACY_POLICY_URL = "https://time-manegur.vercel.app/privacy";
 
+async function clearClientCaches(): Promise<void> {
+  try {
+    if (typeof window !== "undefined" && "caches" in window) {
+      const keys = await caches.keys();
+      await Promise.all(keys.map((k) => caches.delete(k)));
+    }
+    if (typeof navigator !== "undefined" && "serviceWorker" in navigator) {
+      const regs = await navigator.serviceWorker.getRegistrations();
+      await Promise.all(regs.map((r) => r.unregister()));
+    }
+  } catch (e) {
+    console.error("[logout] cache clear failed", e);
+  }
+}
+
 type Props = {
   open: boolean;
   onClose: () => void;
@@ -65,6 +80,8 @@ export function SettingsSheet({
         setLoggingOut(false);
         return;
       }
+      // 端末共有時の前ユーザー情報の取り残し対策
+      await clearClientCaches();
       router.replace("/login");
       router.refresh();
     } catch (e) {

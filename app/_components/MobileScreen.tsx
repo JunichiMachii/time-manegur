@@ -30,6 +30,7 @@ type Props = {
   initialItems?: ScheduleItem[];
   userProfile?: UserProfile;
   selectedDate?: string;
+  userId?: string;
 };
 
 const EMPTY_PROFILE: UserProfile = {
@@ -54,16 +55,19 @@ export function MobileScreen({
   initialItems = [],
   userProfile = EMPTY_PROFILE,
   selectedDate,
+  userId,
 }: Props) {
   const router = useRouter();
   const effectiveDate = selectedDate ?? todayLocal();
   const { tasks, toggleTask, addTask, removeTask } = useTasksStore(
     initialTasks,
     effectiveDate,
+    userId ?? null,
   );
   const { items, addItem, updateItem, removeItem } = useScheduleStore(
     initialItems,
     effectiveDate,
+    userId ?? null,
   );
 
   const [activeTab, setActiveTab] = useState<TabKey>("tasks");

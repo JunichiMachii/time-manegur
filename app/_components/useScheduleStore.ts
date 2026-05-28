@@ -22,6 +22,7 @@ function sortByTime(items: ScheduleItem[]): ScheduleItem[] {
 export function useScheduleStore(
   initial: ScheduleItem[],
   scheduledDate: string,
+  userId: string | null,
 ): ScheduleStore {
   const [items, setItems] = useState<ScheduleItem[]>(initial);
   const supabase = useMemo(() => createClient(), []);
@@ -86,20 +87,18 @@ export function useScheduleStore(
         dbPatch.scheduled_date = scheduledDate;
       }
 
-      void supabase
-        .from(TABLE)
-        .update(dbPatch)
-        .eq("id", id)
-        .then(({ error }) => {
-          if (error) {
-            console.error("[schedule] update failed", error);
-            setItems((cur) =>
-              sortByTime(cur.map((t) => (t.id === id ? snapshot : t))),
-            );
-          }
-        });
+      let q = supabase.from(TABLE).update(dbPatch).eq("id", id);
+      if (userId) q = q.eq("user_id", userId);
+      void q.then(({ error }) => {
+        if (error) {
+          console.error("[schedule] update failed", error);
+          setItems((cur) =>
+            sortByTime(cur.map((t) => (t.id === id ? snapshot : t))),
+          );
+        }
+      });
     },
-    [supabase, scheduledDate],
+    [supabase, scheduledDate, userId],
   );
 
   const removeItem = useCallback(
@@ -111,21 +110,19 @@ export function useScheduleStore(
       });
       if (id < 0) return;
 
-      void supabase
-        .from(TABLE)
-        .delete()
-        .eq("id", id)
-        .then(({ error }) => {
-          if (error) {
-            console.error("[schedule] delete failed", error);
-            if (removed) {
-              const restored = removed;
-              setItems((cur) => sortByTime([...cur, restored]));
-            }
+      let q = supabase.from(TABLE).delete().eq("id", id);
+      if (userId) q = q.eq("user_id", userId);
+      void q.then(({ error }) => {
+        if (error) {
+          console.error("[schedule] delete failed", error);
+          if (removed) {
+            const restored = removed;
+            setItems((cur) => sortByTime([...cur, restored]));
           }
-        });
+        }
+      });
     },
-    [supabase],
+    [supabase, userId],
   );
 
   return { items, addItem, updateItem, removeItem };

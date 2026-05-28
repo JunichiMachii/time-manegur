@@ -17,6 +17,7 @@ export type TasksStore = {
 export function useTasksStore(
   initial: Task[],
   scheduledDate: string,
+  userId: string | null,
 ): TasksStore {
   const [tasks, setTasks] = useState<Task[]>(initial);
   const supabase = useMemo(() => createClient(), []);
@@ -33,11 +34,9 @@ export function useTasksStore(
         const target = prev.find((t) => t.id === id);
         if (!target) return prev;
         const nextDone = !target.done;
-        void supabase
-          .from(TABLE)
-          .update({ done: nextDone })
-          .eq("id", id)
-          .then(({ error }) => {
+        let q = supabase.from(TABLE).update({ done: nextDone }).eq("id", id);
+        if (userId) q = q.eq("user_id", userId);
+        void q.then(({ error }) => {
             if (error) {
               console.error("[tasks] update failed", error);
               setTasks((cur) =>
@@ -52,7 +51,7 @@ export function useTasksStore(
         );
       });
     },
-    [supabase],
+    [supabase, userId],
   );
 
   const addTask = useCallback(
@@ -97,23 +96,21 @@ export function useTasksStore(
       });
       if (id < 0) return; // 楽観挿入中の一時IDは無視
 
-      void supabase
-        .from(TABLE)
-        .delete()
-        .eq("id", id)
-        .then(({ error }) => {
-          if (error) {
-            console.error("[tasks] delete failed", error);
-            if (removed) {
-              const restored = removed;
-              setTasks((cur) =>
-                [...cur, restored].sort((a, b) => a.id - b.id),
-              );
-            }
+      let q = supabase.from(TABLE).delete().eq("id", id);
+      if (userId) q = q.eq("user_id", userId);
+      void q.then(({ error }) => {
+        if (error) {
+          console.error("[tasks] delete failed", error);
+          if (removed) {
+            const restored = removed;
+            setTasks((cur) =>
+              [...cur, restored].sort((a, b) => a.id - b.id),
+            );
           }
-        });
+        }
+      });
     },
-    [supabase],
+    [supabase, userId],
   );
 
   return { tasks, toggleTask, addTask, removeTask };
