@@ -125,19 +125,26 @@ function ScheduleForm({
         }
       : EMPTY,
   );
+  // 数値input は文字列で持ち、submit時にparse。
+  // type="number" の controlled valueと表示文字列の不一致（"05"が残る等）を回避。
+  const [durationText, setDurationText] = useState<string>(() =>
+    String(draft.duration_minutes),
+  );
+  const [notifyText, setNotifyText] = useState<string>(() =>
+    String(draft.notify_minutes_before),
+  );
 
   const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const title = draft.title.trim();
     if (!title) return;
+    const duration = Math.max(1, parseInt(durationText, 10) || 1);
+    const notify = Math.max(0, parseInt(notifyText, 10) || 0);
     onSave({
       time: draft.time,
       title,
-      duration_minutes: Math.max(1, Math.floor(draft.duration_minutes)),
-      notify_minutes_before: Math.max(
-        0,
-        Math.floor(draft.notify_minutes_before),
-      ),
+      duration_minutes: duration,
+      notify_minutes_before: notify,
       is_recurring: draft.is_recurring,
       scheduled_date: draft.scheduled_date,
     });
@@ -266,17 +273,19 @@ function ScheduleForm({
           </label>
           <input
             id={durId}
-            type="number"
-            min={1}
-            step={1}
+            type="text"
+            inputMode="numeric"
+            pattern="[0-9]*"
             required
-            value={draft.duration_minutes}
+            value={durationText}
             onChange={(e) =>
-              setDraft((d) => ({
-                ...d,
-                duration_minutes: Number(e.target.value),
-              }))
+              setDurationText(
+                e.target.value.replace(/\D/g, "").replace(/^0+(?=\d)/, ""),
+              )
             }
+            onBlur={() => {
+              if (durationText === "") setDurationText("1");
+            }}
             style={fieldStyle}
           />
         </div>
@@ -286,17 +295,19 @@ function ScheduleForm({
           </label>
           <input
             id={notifyId}
-            type="number"
-            min={0}
-            step={1}
+            type="text"
+            inputMode="numeric"
+            pattern="[0-9]*"
             required
-            value={draft.notify_minutes_before}
+            value={notifyText}
             onChange={(e) =>
-              setDraft((d) => ({
-                ...d,
-                notify_minutes_before: Number(e.target.value),
-              }))
+              setNotifyText(
+                e.target.value.replace(/\D/g, "").replace(/^0+(?=\d)/, ""),
+              )
             }
+            onBlur={() => {
+              if (notifyText === "") setNotifyText("0");
+            }}
             style={fieldStyle}
           />
         </div>
