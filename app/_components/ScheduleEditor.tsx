@@ -7,7 +7,7 @@ import {
   useState,
   type FormEvent,
 } from "react";
-import { TimeSlotPicker } from "./TimeSlotPicker";
+import { ClockTimePicker } from "./ClockTimePicker";
 import type { ScheduleItem, ScheduleItemDraft } from "./types";
 
 export type EditorMode =
@@ -134,19 +134,17 @@ function ScheduleForm({
   const [isRecurring, setIsRecurring] = useState<boolean>(initialRecurring);
   const [scheduledDate] = useState<string | null>(initialScheduledDate);
 
-  // 時刻スロット: 編集時は item.time、新規は現在時刻
+  // 開始・終了時刻
   const initialTime =
     mode.kind === "edit" ? parseHHMM(mode.item.time) : nowHHMM();
-  const [hour, setHour] = useState<number>(initialTime.h);
-  const [minute, setMinute] = useState<number>(initialTime.m);
+  const [startH, setStartH] = useState<number>(initialTime.h);
+  const [startM, setStartM] = useState<number>(initialTime.m);
 
-  // 所要時間スロット: 編集時は item.duration_minutes を分解。新規は 0 (未指定)。
   const initialDuration =
-    mode.kind === "edit" ? mode.item.duration_minutes : 0;
-  const [durHours, setDurHours] = useState<number>(
-    Math.floor(initialDuration / 60),
-  );
-  const [durMinutes, setDurMinutes] = useState<number>(initialDuration % 60);
+    mode.kind === "edit" ? mode.item.duration_minutes : 60;
+  const initialEndMin = initialTime.h * 60 + initialTime.m + initialDuration;
+  const [endH, setEndH] = useState<number>(Math.floor(initialEndMin / 60) % 24);
+  const [endM, setEndM] = useState<number>(initialEndMin % 60);
 
   // 通知は数値テキスト入力のまま
   const [notifyText, setNotifyText] = useState<string>(() =>
@@ -157,10 +155,12 @@ function ScheduleForm({
     e.preventDefault();
     const trimmed = title.trim();
     if (!trimmed) return;
-    const totalDuration = Math.max(0, durHours * 60 + durMinutes);
+    let durationMinutes = (endH * 60 + endM) - (startH * 60 + startM);
+    if (durationMinutes < 0) durationMinutes += 24 * 60;
+    const totalDuration = Math.max(0, durationMinutes);
     const notify = Math.max(0, parseInt(notifyText, 10) || 0);
     onSave({
-      time: `${pad2(hour)}:${pad2(minute)}`,
+      time: `${pad2(startH)}:${pad2(startM)}`,
       title: trimmed,
       duration_minutes: totalDuration,
       notify_minutes_before: notify,
@@ -260,41 +260,21 @@ function ScheduleForm({
         <div
           style={{
             display: "flex",
-            alignItems: "center",
             justifyContent: "center",
-            gap: 4,
-            padding: "8px 0",
+            padding: "12px 0 8px",
             background: fieldBg,
             border: `1px solid ${border}`,
             borderRadius: 12,
           }}
         >
-          <TimeSlotPicker
-            value={hour}
-            min={0}
-            max={23}
-            onChange={setHour}
-            ariaLabel="時"
+          <ClockTimePicker
+            startH={startH}
+            startM={startM}
+            endH={endH}
+            endM={endM}
+            onChange={(sh, sm, eh, em) => { setStartH(sh); setStartM(sm); setEndH(eh); setEndM(em); }}
             dark={dark}
-          />
-          <div
-            aria-hidden="true"
-            style={{
-              fontSize: 22,
-              fontWeight: 700,
-              color: text,
-              padding: "0 4px",
-            }}
-          >
-            :
-          </div>
-          <TimeSlotPicker
-            value={minute}
-            min={0}
-            max={59}
-            onChange={setMinute}
-            ariaLabel="分"
-            dark={dark}
+            accent={accent}
           />
         </div>
       </div>
@@ -313,51 +293,6 @@ function ScheduleForm({
           placeholder="例: チームMTG"
           style={fieldStyle}
         />
-      </div>
-
-      <div>
-        <div style={labelStyle}>所要時間</div>
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: 4,
-            padding: "8px 0",
-            background: fieldBg,
-            border: `1px solid ${border}`,
-            borderRadius: 12,
-          }}
-        >
-          <TimeSlotPicker
-            value={durHours}
-            min={0}
-            max={23}
-            onChange={setDurHours}
-            padZero={false}
-            ariaLabel="所要時間 時"
-            dark={dark}
-          />
-          <span
-            style={{ fontSize: 14, fontWeight: 600, color: muted, padding: "0 2px" }}
-          >
-            時間
-          </span>
-          <TimeSlotPicker
-            value={durMinutes}
-            min={0}
-            max={59}
-            onChange={setDurMinutes}
-            padZero={false}
-            ariaLabel="所要時間 分"
-            dark={dark}
-          />
-          <span
-            style={{ fontSize: 14, fontWeight: 600, color: muted, padding: "0 2px" }}
-          >
-            分
-          </span>
-        </div>
       </div>
 
       <div>
