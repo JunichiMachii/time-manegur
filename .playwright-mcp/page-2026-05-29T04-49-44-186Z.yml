@@ -1,0 +1,16 @@
+- generic [active] [ref=e1]:
+  - main [ref=e2]:
+    - generic [ref=e3]:
+      - generic [ref=e4]:
+        - generic [ref=e5]: 時間管理アプリ
+        - generic [ref=e6]:
+          - text: 開いた瞬間に
+          - text: すべてが完結する
+      - img [ref=e8]
+      - button "Googleでログイン" [ref=e11] [cursor=pointer]:
+        - img [ref=e12]
+        - generic [ref=e17]: Googleでログイン
+      - generic [ref=e18]:
+        - text: ログインすることで、データは
+        - text: あなたのアカウントに紐付けられます
+  - alert [ref=e19]

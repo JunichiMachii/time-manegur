@@ -1,0 +1,48 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - button "ダークモード" [ref=e3] [cursor=pointer]
+    - generic [ref=e5]:
+      - generic [ref=e6]:
+        - generic [ref=e7]:
+          - button "AM" [ref=e8] [cursor=pointer]
+          - button "PM" [ref=e9] [cursor=pointer]
+        - generic [ref=e10]:
+          - generic [ref=e11]:
+            - button "始 09:00 AM" [ref=e12] [cursor=pointer]:
+              - generic [ref=e13]: 始
+              - generic [ref=e14]: 09:00
+              - generic [ref=e15]: AM
+            - generic [ref=e16]: →
+            - button "終 10:30 AM" [ref=e17] [cursor=pointer]:
+              - generic [ref=e18]: 終
+              - generic [ref=e19]: 10:30
+              - generic [ref=e20]: AM
+          - generic [ref=e21]: "所要時間: 1時間30分"
+      - img [ref=e22] [cursor=pointer]:
+        - generic: "12"
+        - generic: "1"
+        - generic: "2"
+        - generic: "3"
+        - generic: "4"
+        - generic: "5"
+        - generic: "6"
+        - generic: "7"
+        - generic: "8"
+        - generic: "9"
+        - generic: "10"
+        - generic: "11"
+        - generic: 終
+        - generic: 始
+    - generic [ref=e41]: start=9:00 end=10:30
+  - generic [ref=e46] [cursor=pointer]:
+    - button "Open Next.js Dev Tools" [ref=e47]:
+      - img [ref=e48]
+    - generic [ref=e51]:
+      - button "Open issues overlay" [ref=e52]:
+        - generic [ref=e53]:
+          - generic [ref=e54]: "0"
+          - generic [ref=e55]: "1"
+        - generic [ref=e56]: Issue
+      - button "Collapse issues badge" [ref=e57]:
+        - img [ref=e58]
+  - alert [ref=e60]
