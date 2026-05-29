@@ -264,15 +264,6 @@ export function SettingsSheet({
             borderTop: `1px solid ${divider}`,
           }}
         >
-          <CalendarSyncRow
-            syncing={isSyncing}
-            message={syncMessage}
-            onSync={handleSyncCalendar}
-            accent={accent}
-            text={text}
-            muted={muted}
-            divider={divider}
-          />
           <NotificationRow
             perm={notifPerm}
             requesting={requestingPerm}
