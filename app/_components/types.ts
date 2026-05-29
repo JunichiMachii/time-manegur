@@ -20,6 +20,7 @@ export type ScheduleItem = {
   notify_minutes_before: number;
   is_recurring: boolean;
   scheduled_date: string | null;
+  google_event_id?: string | null;
 };
 
 export type ScheduleItemDraft = {

@@ -2,8 +2,12 @@
 
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { createClient } from "@/lib/supabase/client";
+import {
+  syncGoogleCalendar,
+  type SyncResult,
+} from "@/app/actions/syncGoogleCalendar";
 import type { UserProfile } from "./types";
 
 const APP_VERSION = "v1.1.0";
@@ -47,6 +51,11 @@ export function SettingsSheet({
     "default",
   );
   const [requestingPerm, setRequestingPerm] = useState(false);
+  const [isSyncing, startSync] = useTransition();
+  const [syncMessage, setSyncMessage] = useState<{
+    kind: "success" | "error";
+    text: string;
+  } | null>(null);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -94,6 +103,22 @@ export function SettingsSheet({
       document.body.style.overflow = "";
     };
   }, [open, onClose]);
+
+  const handleSyncCalendar = () => {
+    setSyncMessage(null);
+    startSync(async () => {
+      const result: SyncResult = await syncGoogleCalendar();
+      if ("error" in result) {
+        setSyncMessage({ kind: "error", text: result.error });
+      } else {
+        setSyncMessage({
+          kind: "success",
+          text: `${result.synced}件の予定を同期しました`,
+        });
+        router.refresh();
+      }
+    });
+  };
 
   const handleLogout = async () => {
     if (loggingOut) return;
@@ -239,6 +264,15 @@ export function SettingsSheet({
             borderTop: `1px solid ${divider}`,
           }}
         >
+          <CalendarSyncRow
+            syncing={isSyncing}
+            message={syncMessage}
+            onSync={handleSyncCalendar}
+            accent={accent}
+            text={text}
+            muted={muted}
+            divider={divider}
+          />
           <NotificationRow
             perm={notifPerm}
             requesting={requestingPerm}
@@ -469,6 +503,79 @@ function ChevronRight({ color }: { color: string }) {
         fill="none"
       />
     </svg>
+  );
+}
+
+type CalendarSyncRowProps = {
+  syncing: boolean;
+  message: { kind: "success" | "error"; text: string } | null;
+  onSync: () => void;
+  accent: string;
+  text: string;
+  muted: string;
+  divider: string;
+};
+
+function CalendarSyncRow({
+  syncing,
+  message,
+  onSync,
+  accent,
+  text,
+  muted,
+  divider,
+}: CalendarSyncRowProps) {
+  return (
+    <div
+      style={{
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
+        padding: "14px 8px",
+        borderBottom: `1px solid ${divider}`,
+        gap: 12,
+      }}
+    >
+      <div
+        style={{ display: "flex", flexDirection: "column", gap: 2, minWidth: 0 }}
+      >
+        <span style={{ fontSize: 15, fontWeight: 500, color: text }}>
+          Googleカレンダー
+        </span>
+        {message && (
+          <span
+            style={{
+              fontSize: 11.5,
+              color: message.kind === "success" ? accent : "#C4634E",
+            }}
+          >
+            {message.text}
+          </span>
+        )}
+      </div>
+      <button
+        type="button"
+        onClick={onSync}
+        disabled={syncing}
+        style={{
+          appearance: "none",
+          border: `1px solid ${accent}`,
+          background: "transparent",
+          color: accent,
+          fontSize: 12.5,
+          fontWeight: 700,
+          padding: "8px 14px",
+          borderRadius: 999,
+          cursor: syncing ? "default" : "pointer",
+          opacity: syncing ? 0.6 : 1,
+          fontFamily: "inherit",
+          flexShrink: 0,
+          whiteSpace: "nowrap",
+        }}
+      >
+        {syncing ? "同期中…" : "同期する"}
+      </button>
+    </div>
   );
 }
 

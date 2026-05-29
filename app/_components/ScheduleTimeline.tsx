@@ -202,6 +202,27 @@ function TimelineItem({
           >
             {item.title}
           </span>
+          {item.google_event_id && (
+            <span
+              title="Googleカレンダーから同期"
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                justifyContent: "center",
+                width: 14,
+                height: 14,
+                borderRadius: "50%",
+                background: "#4285F4",
+                color: "#fff",
+                fontSize: 8,
+                fontWeight: 700,
+                flexShrink: 0,
+                lineHeight: 1,
+              }}
+            >
+              G
+            </span>
+          )}
           {isNow && <BellIcon color={accent} size={14} />}
         </div>
         <div

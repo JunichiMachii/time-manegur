@@ -52,7 +52,7 @@ export default async function Home({
     supabase
       .from("schedule_items")
       .select(
-        "id, time, title, duration_minutes, notify_minutes_before, is_recurring, scheduled_date",
+        "id, time, title, duration_minutes, notify_minutes_before, is_recurring, scheduled_date, google_event_id",
       )
       .eq("user_id", userId)
       .or(`is_recurring.eq.true,scheduled_date.eq.${selectedDate}`)

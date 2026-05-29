@@ -6,7 +6,7 @@ import type { ScheduleItem, ScheduleItemDraft } from "./types";
 
 const TABLE = "schedule_items";
 const COLUMNS =
-  "id, time, title, duration_minutes, notify_minutes_before, is_recurring, scheduled_date";
+  "id, time, title, duration_minutes, notify_minutes_before, is_recurring, scheduled_date, google_event_id";
 
 export type ScheduleStore = {
   items: ScheduleItem[];
